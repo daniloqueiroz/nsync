@@ -4,7 +4,7 @@ File Scan -> Synchronizer -> Storage -> Remote Index File & Remote File Storage
 
 # Components
 
-* File Scanner: 
+* File Scanner:
 
     Do full folder scan and add files to synchronization queue
     Register Directories to watch and add files to synchronization queue

@@ -1,11 +1,22 @@
-* Mapped file index
-* Synchronizer heuristic
-* File events queue
-* File scan (full dir scan)
-* Storage Layer
-* LocalFolderStorageProvider
-* File watching mechanism
+* _Async file index_
+* _Synchronizer heuristic_
+* _Storage Layer_
+* _LocalFolderStorageProvider_
+* _Configuration layer_
+* _Initialization / Application_
+* _Folder watching_
+  * Handle modify events
+  * Handle delete events
+* Folder scan
+* _CLI commands (over rest)_
+  * _Add Folder command_
+    * Corner cases: handle duplicates
+  * Folder Status
+  * General Status
 * SambaStorageProvider/Index
-* Configuration layer
-* CLI commands (over rest)
-* WEB-Ui
+* File deletion support
+* Watchdog
+* IO Scheduling
+* WEB-UI
+* Telemetry
+* Discovery
