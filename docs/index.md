@@ -1,37 +1,25 @@
-## Welcome to GitHub Pages
+# NSync
 
-You can use the [editor on GitHub](https://github.com/daniloqueiroz/nsync/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
+Silencio... No hay banda!
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+NSync is a simple tool to synchronize local folders to
+remote storages, supporting different storages backends
+such as Samba/CIFS, S3 and so on and aims to support
+Linux, MacOs and Windows.
 
-### Markdown
+# How to contribute
+The project is written in Kotlin and it's in a very
+early development stage.  
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## References
 
-```markdown
-Syntax highlighted code block
+* [Architecture](architecture.md)
+* [Roadmap](roadmap.md)
 
-# Header 1
-## Header 2
-### Header 3
+# Usage
 
-- Bulleted
-- List
+We are not there yet!
 
-1. Numbered
-2. List
+# License
 
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/daniloqueiroz/nsync/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+NSync is under GPLv3
