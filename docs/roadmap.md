@@ -19,6 +19,7 @@
 * File deletion support
 * Watchdog
 * IO Scheduling
+  * ThreadPool tunning
 * WEB-UI
 * Telemetry
 * Discovery
