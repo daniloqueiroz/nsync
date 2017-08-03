@@ -18,7 +18,7 @@ interface ApiService {
     fun shutdown(): Call<Status>
 
     @POST("rest/folders")
-    fun addFolder(@Body folder: FolderRequest): Call<SyncFolder>
+    fun addFolder(@Body folder: FolderRequest): Call<FolderResponse>
 
     companion object Factory {
         fun create(url: String): ApiService {
@@ -61,7 +61,7 @@ class Client(port: Int) {
 
     fun addFolder(localUri: String, remoteUri: String) {
         this.execute(this.api.addFolder(FolderRequest(localUri, remoteUri)), {
-            print("Sync folder created. Uid: ${it.folderId}")
+            print("Sync folder created. Uid: ${it.uid}")
         })
     }
 }
