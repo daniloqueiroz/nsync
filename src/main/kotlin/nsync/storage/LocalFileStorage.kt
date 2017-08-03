@@ -45,6 +45,7 @@ internal class AsyncFileChannelTransfer(val srcFile: Path, val dstFile: Path) {
             StandardOpenOption.CREATE) }
 
     suspend fun call(): Boolean {
+        dstFile.toFile().parentFile?.mkdirs() // Ensure dest path (dirs/ subdirs) exists
         var result = true
         var pos: Long = 0
 
