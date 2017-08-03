@@ -35,7 +35,7 @@ class Loader(
         try {
             var app: Application? = null
             var api: WebServer? = null
-            val bootTime = measureTimeMillis {
+            val time = measureTimeMillis {
                 logger.info { "Using Configuration from ${Configuration.directory}" }
                 val conf = Configuration(BinaryFileConfigurationStorage(
                         Configuration.directory.resolve("config").toFile()))
@@ -55,7 +55,7 @@ class Loader(
                 api?.start()
             }
 
-            logger.info { "Loading completed after $bootTime ms" }
+            logger.info { "Application is up! ($time ms)" }
             app?.start()
             api?.stop()
         } catch (err: Exception) {

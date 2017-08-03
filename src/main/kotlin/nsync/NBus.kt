@@ -9,12 +9,14 @@ import nsync.index.SynchronizationStatus
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
 object NBus {
     private val logger = KotlinLogging.logger {}
     private val subscribers: MutableMap<KClass<*>, MutableList<Consumer>> = mutableMapOf()
     private val chn = Channel<NSyncEvent>(Channel.UNLIMITED)
+    private val size = AtomicInteger(0)
 
     init {
         launch(CommonPool) {
@@ -31,6 +33,7 @@ object NBus {
     private suspend fun dispatch(evtType: KClass<out NSyncEvent>, consumer: Consumer, event: NSyncEvent) {
         try {
             logger.debug { "Dispatching ${evtType.java.simpleName} event to ${consumer::class.java.simpleName}" }
+            logger.debug { "Bus pending message: ${size.getAndDecrement()}" }
             consumer.onEvent(event)
         } catch (err: Exception) {
             logger.error(err) { "Error dispatching event " }
@@ -48,6 +51,7 @@ object NBus {
 
     suspend fun publish(event: NSyncEvent) {
         logger.debug { "Event $event published" }
+        this.size.incrementAndGet()
         chn.send(event)
     }
 }

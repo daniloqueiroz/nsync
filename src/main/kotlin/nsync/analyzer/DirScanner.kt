@@ -7,25 +7,29 @@ import nsync.NBus
 import nsync.SyncFolder
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.system.measureTimeMillis
 
 class DirScanner(private val record: SyncFolder): Runnable {
     private val logger = KotlinLogging.logger {}
 
     override fun run() {
-        logger.info { "Scanning $record " }
-        Files.walk(Paths.get(record.pathLocal)).forEach({
-            if (it.toFile().isFile) {
-                runBlocking {
-                    val event = LocalFile(record.folderId, it)
-                    try {
-                        logger.info {"Scanner find file ${event.localFilePath}"}
-                        NBus.publish(event)
-                    } catch (err: Exception) {
-                        logger.error(err) { "Error processing scanned file" }
+        logger.debug { "Scanning $record " }
+        val time = measureTimeMillis {
+            Files.walk(Paths.get(record.pathLocal)).forEach({
+                if (it.toFile().isFile) {
+                    runBlocking {
+                        val event = LocalFile(record.folderId, it)
+                        try {
+                            logger.info { "Scanner find file ${event.localFilePath}" }
+                            NBus.publish(event)
+                        } catch (err: Exception) {
+                            logger.error(err) { "Error processing scanned file" }
+                        }
                     }
                 }
-            }
-        })
+            })
+        }
+        logger.info { "Finished scan for $record ($time ms)"}
     }
 
     companion object {

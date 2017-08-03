@@ -12,6 +12,7 @@ import java.nio.channels.AsynchronousFileChannel
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
+import kotlin.system.measureNanoTime
 
 class LocalFileStorage: StorageBackend, Consumer {
     companion object : KLogging()
@@ -57,22 +58,25 @@ internal class AsyncFileChannelTransfer(val srcFile: Path, val dstFile: Path) {
         var result = true
         var pos: Long = 0
 
-        try {
-            do {
-                buf.rewind()
-                val read = src.aRead(buf, pos)
-                buf.flip()
-                dst.aWrite(buf, pos)
-                pos += read
-                logger.debug { "Transferring ${srcFile} to ${dstFile}: ${pos} bytes transferred" }
-            } while (read == bufSize)
-        } catch (err: IOException) {
-            logger.error(err) { "Error during transfer from ${srcFile} to ${dstFile}" }
-            result = false
-        } finally {
-            dst.close()
-            src.close()
+        val time = measureNanoTime {
+            try {
+                do {
+                    buf.rewind()
+                    val read = src.aRead(buf, pos)
+                    buf.flip()
+                    dst.aWrite(buf, pos)
+                    pos += read
+                    logger.debug { "Transferring ${srcFile} to ${dstFile}: ${pos} bytes transferred" }
+                } while (read == bufSize)
+            } catch (err: IOException) {
+                logger.error(err) { "Error during transfer from ${srcFile} to ${dstFile}" }
+                result = false
+            } finally {
+                dst.close()
+                src.close()
+            }
         }
+        logger.info { "Transfer complete $srcFile to $dstFile ($time ms)" }
         return result
     }
 }

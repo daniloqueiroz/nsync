@@ -9,6 +9,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousFileChannel
 import java.nio.file.StandardOpenOption
 import java.security.MessageDigest
+import kotlin.system.measureTimeMillis
 
 
 class Checksum(val file: File) {
@@ -21,18 +22,21 @@ class Checksum(val file: File) {
     suspend fun compute(): ByteArray {
         logger.debug { "Calculating checksum for ${file.absolutePath}" }
         AsynchronousFileChannel.open(file.toPath(), StandardOpenOption.READ).use {
-            md5sum.reset()
-            var pos: Long = 0
-            do {
-                buf.rewind()
-                val read = it.aRead(buf, pos)
-                pos += read
-                buf.flip()
-                md5sum.update(buf)
-            } while (read == bufSize)
-            val md5 = md5sum.digest()!!
-            logger.info { "Checksum for ${file.absolutePath} is ${md5.toHexString()}" }
-            return md5
+            var md5: ByteArray? = null
+            val time = measureTimeMillis {
+                md5sum.reset()
+                var pos: Long = 0
+                do {
+                    buf.rewind()
+                    val read = it.aRead(buf, pos)
+                    pos += read
+                    buf.flip()
+                    md5sum.update(buf)
+                } while (read == bufSize)
+                md5 = md5sum.digest()!!
+            }
+            logger.info { "Checksum for ${file.absolutePath} is ${md5?.toHexString()} ($time ms)" }
+            return md5!!
         }
 
     }
