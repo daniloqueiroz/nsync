@@ -50,9 +50,7 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
     }
 
     private suspend fun consume(inbox: Channel<AppCommand>) {
-        while (true) {
-            logger.debug { "Application is waiting for commands" }
-            val msg = inbox.receive()
+        for (msg in inbox) {
             logger.debug { "Command ${msg} received" }
             try {
                 process(msg)

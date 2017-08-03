@@ -6,7 +6,7 @@ import org.assertj.core.api.Assertions.*
 class ConfigurationTest {
 
     @Test fun setAndReadSynchronization_defaultBackend() {
-        val data = mutableMapOf<String, SyncFolder>("id" to SyncFolder("id", "/home", "/backup"))
+        val data = mutableMapOf<String, ConfSyncFolder>("id" to ConfSyncFolder("id", "/home", "/backup"))
 
         val conf = Configuration()
 

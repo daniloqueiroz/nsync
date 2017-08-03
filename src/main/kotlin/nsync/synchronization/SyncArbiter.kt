@@ -21,7 +21,7 @@ import java.util.*
 class SyncArbiter(
         private val metadataDirectory: Path,
         private val storage: StorageResolver,
-        private val catalog: FolderCatalog): Consumer<NSyncEvent> {
+        private val catalog: FolderCatalog) : Consumer {
     private companion object : KLogging()
 
     private val indexes: MutableMap<String, Index> = mutableMapOf()

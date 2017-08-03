@@ -12,27 +12,33 @@ import kotlin.reflect.KClass
 
 object NBus {
     private val logger = KotlinLogging.logger {}
-    private val subscribers: MutableMap<KClass<*>, MutableList<Consumer<NSyncEvent>>> = mutableMapOf()
-    private val chn = Channel<NSyncEvent>()
+    private val subscribers: MutableMap<KClass<*>, MutableList<Consumer>> = mutableMapOf()
+    private val chn = Channel<NSyncEvent>(Channel.UNLIMITED)
 
     init {
         launch(CommonPool) {
-            do {
-                val event = chn.receive()
+            for (event in chn) {
                 val evtType = event::class
                 for (consumer in subscribers.getOrDefault(evtType, mutableListOf())) {
-                    logger.debug { "Dispatching ${evtType.java.simpleName} event to ${consumer::class.java.simpleName}" }
-                    consumer.onEvent(event)
-
+                    dispatch(evtType, consumer, event)
                 }
                 yield()
-            } while (true)
+            }
         }
     }
 
-    fun register(consumer: Consumer<NSyncEvent>, vararg evtTypes: KClass<*>) {
+    private suspend fun dispatch(evtType: KClass<out NSyncEvent>, consumer: Consumer, event: NSyncEvent) {
+        try {
+            logger.debug { "Dispatching ${evtType.java.simpleName} event to ${consumer::class.java.simpleName}" }
+            consumer.onEvent(event)
+        } catch (err: Exception) {
+            logger.error(err) { "Error dispatching event " }
+        }
+    }
+
+    fun register(consumer: Consumer, vararg evtTypes: KClass<*>) {
         for (type in evtTypes) {
-            logger.debug { "Registering consumer ${consumer::class.java.simpleName} to ${type.java.simpleName}" }
+            logger.info { "Registering consumer ${consumer::class.java.simpleName} to ${type.java.simpleName}" }
             val existent = subscribers.getOrDefault(type, mutableListOf())
             existent.add(consumer)
             subscribers[type] = existent
@@ -40,12 +46,13 @@ object NBus {
     }
 
     suspend fun publish(event: NSyncEvent) {
+        logger.debug { "Event $event published" }
         chn.send(event)
     }
 }
 
-interface Consumer<in T> {
-    suspend fun onEvent(event: T)
+interface Consumer {
+    suspend fun onEvent(event: NSyncEvent)
 }
 
 sealed class NSyncEvent

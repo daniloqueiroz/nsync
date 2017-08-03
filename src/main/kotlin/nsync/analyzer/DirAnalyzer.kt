@@ -6,7 +6,7 @@ import nsync.NSyncEvent
 import nsync.SyncFolder
 
 
-class DirAnalyzer : Consumer<NSyncEvent> {
+class DirAnalyzer : Consumer {
     private val watcher = DirWatcher()
 
     init {
