@@ -1,4 +1,4 @@
-package nsync.watcher
+package nsync.analyzer
 
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
@@ -14,10 +14,11 @@ import java.nio.file.Paths
 import java.nio.file.StandardWatchEventKinds.*
 import java.nio.file.WatchKey
 
-private data class Record(val uid: String, val dir: Path)
+
 
 class DirWatcher(private val arbiter: SyncArbiter) {
-    companion object : KLogging()
+    private data class Record(val uid: String, val dir: Path)
+    private companion object : KLogging()
 
     private val service = FileSystems.getDefault().newWatchService()
     private val uids: MutableMap<WatchKey, Record> = mutableMapOf()
@@ -25,7 +26,7 @@ class DirWatcher(private val arbiter: SyncArbiter) {
     private var poll: Thread? = null
 
     fun watch(record: SyncFolder) {
-        logger.info { "Watching directory ${record.uid} ${record.localFolder}" }
+        logger.info { "Watching $record" }
         this.watch(record.uid, Paths.get(record.pathLocal))
     }
 
@@ -45,7 +46,7 @@ class DirWatcher(private val arbiter: SyncArbiter) {
                 } while (true)
             }
         })
-        poll?.name = "FSEventPoll"
+        poll?.name = "DirWatcher"
         poll?.isDaemon = true
         poll?.start()
 
@@ -78,8 +79,6 @@ class DirWatcher(private val arbiter: SyncArbiter) {
                 ENTRY_MODIFY -> println("modified: ${it.context()}")
             }
         }
-
-
     }
 
 }

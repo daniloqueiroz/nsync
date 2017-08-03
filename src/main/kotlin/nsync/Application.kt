@@ -9,11 +9,11 @@ import mu.KLogging
 import nsync.Configuration
 import nsync.FolderCatalog
 import nsync.SyncFolder
+import nsync.analyzer.DirAnalizer
 import nsync.storage.LocalFileStorage
 import nsync.storage.StorageBackend
 import nsync.storage.StorageResolver
 import nsync.synchronization.SyncArbiter
-import nsync.watcher.DirWatcher
 
 sealed class AppCommand {
     val outbox: Channel<SyncFolder> = Channel()
@@ -28,7 +28,7 @@ class Application(conf: Configuration, inbox: Channel<AppCommand>) {
     private val name = "NSync"
     private val version = "1.0.0"
     private val catalog: FolderCatalog
-    private val watcher: DirWatcher
+    private val analyzer: DirAnalizer
     private val job: Job
     private val arbiter: SyncArbiter
 
@@ -36,16 +36,16 @@ class Application(conf: Configuration, inbox: Channel<AppCommand>) {
         logger.info { "Starting ${name} version ${version} " }
         catalog = FolderCatalog(conf)
         arbiter = SyncArbiter(Configuration.directory.resolve("metadata"), StorageResolverImpl, catalog)
-        watcher = DirWatcher(arbiter)
+        analyzer = DirAnalizer(arbiter)
 
-        logger.info { "Loading existent folders" }
-        for(folder in catalog) {
-            this.registerFolder(folder)
-        }
-
-        logger.info { "Initializing command listener" }
         job = launch(CommonPool) {
-            watcher.start()
+            analyzer.start()
+            logger.info { "Loading existent folders" }
+            for(folder in catalog) {
+                registerFolder(folder)
+            }
+
+            logger.info { "Initializing command listener" }
             consume(inbox)
         }
     }
@@ -84,9 +84,9 @@ class Application(conf: Configuration, inbox: Channel<AppCommand>) {
         cmd.outbox.send(record)
     }
 
-    private fun registerFolder(folder: SyncFolder) {
+    private suspend fun registerFolder(folder: SyncFolder) {
         this.arbiter?.dirAdded(folder)
-        watcher.watch(folder)
+        analyzer.analize(folder)
     }
 
     /**
