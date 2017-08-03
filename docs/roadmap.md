@@ -9,17 +9,18 @@
 * _Folder watching_
   * Handle modify events
   * Handle delete events
-* Folder scan
+* _Folder scan_
 * _CLI commands (over rest)_
   * _Add Folder command_
     * Corner cases: handle duplicates
   * Folder Status
   * General Status
+* Error Handling / Retries
+* IO Scheduling
+  * ThreadPool tunning
 * SambaStorageProvider/Index
 * File deletion support
 * Watchdog
-* IO Scheduling
-  * ThreadPool tunning
 * WEB-UI
 * Telemetry
 * Discovery

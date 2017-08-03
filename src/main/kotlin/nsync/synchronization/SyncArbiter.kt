@@ -56,7 +56,7 @@ class SyncArbiter(
      */
     private suspend fun fileChanged(file: LocalFile) {
         val syncFolder = this.catalog.find(file.folderId) ?: return
-        logger.info { "File file received $file - $syncFolder" }
+        logger.info { "File received $file" }
 
         val index = this.indexes[file.folderId]!!
         val record = this.findRecord(index, file, relativePath(syncFolder, file.localFilePath))

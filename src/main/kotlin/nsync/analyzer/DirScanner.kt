@@ -18,7 +18,7 @@ class DirScanner(private val record: SyncFolder): Runnable {
                 runBlocking {
                     val event = LocalFile(record.folderId, it)
                     try {
-                        logger.debug {"Scanner find file ${event.localFilePath} - sending to arbiter"}
+                        logger.info {"Scanner find file ${event.localFilePath}"}
                         NBus.publish(event)
                     } catch (err: Exception) {
                         logger.error(err) { "Error processing scanned file" }
