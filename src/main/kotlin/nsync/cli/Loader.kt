@@ -54,7 +54,7 @@ class Loader(
         log.setLevel(level ?: Level.ALL)
 
         val layout = PatternLayout()
-        layout.setPattern("%date{yyyy-MM-dd'T'HH:mm:ss.SSS'Z', UTC} %level [%thread] %logger{15} %msg %ex{3} %n")
+        layout.setPattern("%date{yyyy-MM-dd'T'HH:mm:ss.SSS'Z', UTC} | %level | %thread | %logger{15} | %msg %ex{3} %n")
         layout.setContext(logCtx as Context)
         layout.start()
 
