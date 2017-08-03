@@ -1,20 +1,24 @@
 package nsync.analyzer
 
+import nsync.Consumer
+import nsync.NBus
+import nsync.NSyncEvent
 import nsync.SyncFolder
-import nsync.synchronization.SyncArbiter
 
 
-class DirAnalizer(arbiter: SyncArbiter) {
-    private val scanner = DirScanner(arbiter)
-    private val watcher = DirWatcher(arbiter)
+class DirAnalyzer : Consumer<NSyncEvent> {
+    private val watcher = DirWatcher()
 
-    fun start() {
-        scanner.start()
-        watcher.start()
+    init {
+        NBus.register(this, SyncFolder::class)
     }
 
-    suspend fun analize(folder: SyncFolder) {
-        scanner.scan(folder)
+    override suspend fun onEvent(event: NSyncEvent) {
+        this.analyze(event as SyncFolder)
+    }
+
+    private suspend fun analyze(folder: SyncFolder) {
         watcher.watch(folder)
+        DirScanner.scan(folder)
     }
 }

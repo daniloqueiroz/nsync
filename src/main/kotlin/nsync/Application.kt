@@ -6,48 +6,47 @@ import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.yield
 import mu.KLogging
-import nsync.Configuration
 import nsync.FolderCatalog
+import nsync.NBus
 import nsync.SyncFolder
-import nsync.analyzer.DirAnalizer
 import nsync.storage.LocalFileStorage
 import nsync.storage.StorageBackend
 import nsync.storage.StorageResolver
-import nsync.synchronization.SyncArbiter
 
 sealed class AppCommand {
     val outbox: Channel<SyncFolder> = Channel()
 }
+
 class StopCmd : AppCommand()
 data class AddSyncFolderCmd(val localUri: String, val remoteUri: String) : AppCommand()
 
 
-class Application(conf: Configuration, inbox: Channel<AppCommand>) {
+class Application(private val catalog: FolderCatalog, private val inbox: Channel<AppCommand>) {
     companion object : KLogging()
 
     private val name = "NSync"
     private val version = "1.0.0"
-    private val catalog: FolderCatalog
-    private val analyzer: DirAnalizer
-    private val job: Job
-    private val arbiter: SyncArbiter
+    private var job: Job? = null
 
-    init {
+    /**
+     * Starts the application, in other words makes the application
+     * starts processing commands.
+     *
+     * This command blocks until the application stops
+     */
+    suspend fun start() {
         logger.info { "Starting ${name} version ${version} " }
-        catalog = FolderCatalog(conf)
-        arbiter = SyncArbiter(Configuration.directory.resolve("metadata"), StorageResolverImpl, catalog)
-        analyzer = DirAnalizer(arbiter)
 
-        job = launch(CommonPool) {
-            analyzer.start()
+        this.job = launch(CommonPool) {
             logger.info { "Loading existent folders" }
-            for(folder in catalog) {
+            for (folder in catalog) {
                 registerFolder(folder)
             }
 
             logger.info { "Initializing command listener" }
             consume(inbox)
         }
+        this.job?.join()
     }
 
     private suspend fun consume(inbox: Channel<AppCommand>) {
@@ -73,7 +72,7 @@ class Application(conf: Configuration, inbox: Channel<AppCommand>) {
 
     private fun shutdown() {
         logger.info { "Stopping ${name}" }
-        this.job.cancel()
+        this.job?.cancel()
     }
 
     private suspend fun addSyncDir(cmd: AddSyncFolderCmd) {
@@ -85,20 +84,11 @@ class Application(conf: Configuration, inbox: Channel<AppCommand>) {
     }
 
     private suspend fun registerFolder(folder: SyncFolder) {
-        this.arbiter?.dirAdded(folder)
-        analyzer.analize(folder)
-    }
-
-    /**
-     * Joins application coroutine and waits for it to finishes.
-     * This method is blocking.
-     */
-    suspend fun join() {
-        this.job.join()
+        NBus.publish(folder)
     }
 }
 
-internal object StorageResolverImpl: StorageResolver {
+internal object StorageResolverImpl : StorageResolver {
     override fun getStorageBackend(folder: SyncFolder): StorageBackend {
         when (folder.schemeRemote) {
             "file" -> return LocalFileStorage(folder)

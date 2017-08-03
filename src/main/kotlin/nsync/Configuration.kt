@@ -5,6 +5,7 @@ import org.mapdb.DBMaker
 import org.mapdb.HTreeMap
 import org.mapdb.Serializer
 import java.io.File
+import java.io.Serializable
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.reflect.KProperty
@@ -38,5 +39,10 @@ class Configuration(backend: ConfigurationStorage = ConfigurationStorage()) {
         }
     }
 
-    var synchronization: MutableMap<String, SyncFolder>? by backend
+    var synchronization: MutableMap<String, ConfSyncFolder>? by backend
 }
+
+data class ConfSyncFolder(
+        val uid: String,
+        val localFolder: String,
+        val remoteFolder: String): Serializable

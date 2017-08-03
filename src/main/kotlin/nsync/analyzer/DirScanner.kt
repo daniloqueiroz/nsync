@@ -1,48 +1,39 @@
 package nsync.analyzer
 
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.runBlocking
-import mu.KLogging
+import mu.KotlinLogging
 import nsync.FileChangedEvent
+import nsync.NBus
 import nsync.SyncFolder
-import nsync.synchronization.SyncArbiter
 import java.nio.file.Files
 import java.nio.file.Paths
 
-class DirScanner(private val arbiter: SyncArbiter) {
-    private companion object : KLogging()
+class DirScanner(private val record: SyncFolder): Runnable {
+    private val logger = KotlinLogging.logger {}
 
-    private val chn = Channel<FileChangedEvent>()
-
-    fun start() {
-        async(CommonPool) {
-            do {
-                try {
-                    val event = chn.receive()
-                    logger.debug {"Scanner find file ${event.localFilePath} - sending to arbiter"}
-                    arbiter.fileChanged(event)
-                } catch (err: Exception) {
-                    logger.error(err) { "Error processing scanned file" }
-                }
-            } while (true)
-        }
-    }
-
-    suspend fun scan(record: SyncFolder) {
-        val scanner = Thread({
-            logger.info { "Scanning $record " }
-            Files.walk(Paths.get(record.pathLocal)).forEach({
-                if (it.toFile().isFile) {
-                    runBlocking {
-                        chn.send(FileChangedEvent(record.uid, it))
+    override fun run() {
+        logger.info { "Scanning $record " }
+        Files.walk(Paths.get(record.pathLocal)).forEach({
+            if (it.toFile().isFile) {
+                runBlocking {
+                    val event = FileChangedEvent(record.uid, it)
+                    try {
+                        logger.debug {"Scanner find file ${event.localFilePath} - sending to arbiter"}
+                        NBus.publish(event)
+                    } catch (err: Exception) {
+                        logger.error(err) { "Error processing scanned file" }
                     }
                 }
-            })
+            }
         })
-        scanner.name = "DirScanner:${record.uid}"
-        scanner.isDaemon = true
-        scanner.start()
+    }
+
+    companion object {
+        fun scan(record: SyncFolder) {
+            val scanner = Thread(DirScanner(record))
+            scanner.name = "Analyzer.scanner-worker:${record.uid}"
+            scanner.isDaemon = true
+            scanner.start()
+        }
     }
 }

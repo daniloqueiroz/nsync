@@ -1,6 +1,5 @@
 package nsync.app
 
-import kotlinx.coroutines.experimental.runBlocking
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import ch.qos.logback.classic.PatternLayout
@@ -8,13 +7,18 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.ConsoleAppender
 import ch.qos.logback.core.Context
 import ch.qos.logback.core.FileAppender
+import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
 import nsync.BinaryFileConfigurationStorage
 import nsync.Configuration
+import nsync.FolderCatalog
+import nsync.analyzer.DirAnalyzer
+import nsync.cli.rest.WebServer
+import nsync.synchronization.SyncArbiter
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
-import kotlinx.coroutines.experimental.channels.Channel
-import nsync.cli.rest.WebServer
+import kotlin.system.measureTimeMillis
 
 /**
  * This class is responsible by bootstrapping the application.
@@ -24,25 +28,39 @@ import nsync.cli.rest.WebServer
  */
 class Loader(
         private val logLevel: String,
-        port: Int
+        private val port: Int
 ) {
     companion object : KLogging()
 
-    private val conf = Configuration(BinaryFileConfigurationStorage(
-            Configuration.directory.resolve("config").toFile()))
-    private val inbox = Channel<AppCommand>(10)
-    private val api = WebServer(port, inbox)
-
     fun boot() = runBlocking<Unit> {
-        logger.info { "Using Configuration from ${Configuration.directory}" }
-        configureLog(Configuration.directory)
+        try {
+            var app: Application? = null
+            var api: WebServer? = null
+            val bootTime = measureTimeMillis {
+                logger.info { "Using Configuration from ${Configuration.directory}" }
+                val conf = Configuration(BinaryFileConfigurationStorage(
+                        Configuration.directory.resolve("config").toFile()))
+                configureLog(Configuration.directory)
 
-        logger.info { "Initializing REST WebServer" }
-        api.start()
+                logger.info { "Bootstraping application" }
+                val inbox = Channel<AppCommand>(10)
 
-        logger.info { "Bootstraping application" }
-        Application(conf, inbox).join()
-        api.stop()
+                val catalog = FolderCatalog(conf)
+                DirAnalyzer()
+                SyncArbiter(Configuration.directory.resolve("metadata"), StorageResolverImpl, catalog)
+                app = Application(catalog, inbox)
+
+                logger.info { "Initializing REST WebServer" }
+                api = WebServer(port, inbox)
+                api?.start()
+            }
+
+            logger.info { "Loading completed after $bootTime ms" }
+            app?.start()
+            api?.stop()
+        } catch (err: Exception) {
+            logger.error(err) { "Panic: Unable to load Application"}
+        }
     }
 
     private fun configureLog(confDir: Path) {

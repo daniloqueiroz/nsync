@@ -1,33 +1,7 @@
 package nsync
 
 import mu.KLogging
-import java.io.Serializable
-import java.net.URI
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.*
-
-data class SyncFolder(
-        val uid: String,
-        val localFolder: String,
-        val remoteFolder: String) : Serializable {
-
-    val uriRemote: URI by lazy { URI(remoteFolder) }
-    val schemeRemote: String by lazy { uriRemote.scheme }
-    val pathRemote: String by lazy { uriRemote.path }
-
-    val uriLocal: URI by lazy { URI(localFolder) }
-    val schemeLocal: String by lazy { uriLocal.scheme }
-    val pathLocal: String by lazy { uriLocal.path }
-
-    fun fileRelativePath(localFile: Path): String = Paths.get(pathLocal).relativize(localFile).toString()
-}
-
-
-data class FileChangedEvent(
-        val uid: String,
-        val localFilePath: Path)
-
 
 class FolderCatalog(private val conf: Configuration) {
     companion object : KLogging()
@@ -44,19 +18,19 @@ class FolderCatalog(private val conf: Configuration) {
         logger.info { "Registering new $folder" }
 
 
-        val dirs: MutableMap<String, SyncFolder> = this.conf.synchronization!!
-        dirs[folder.uid] = folder
+        val dirs: MutableMap<String, ConfSyncFolder> = this.conf.synchronization!!
+        dirs[folder.uid] = ConfSyncFolder(folder.uid, folder.localFolder, folder.remoteFolder)
         this.conf.synchronization = dirs
 
         return folder
     }
 
     fun find(uid: String): SyncFolder? {
-        return this.conf.synchronization!![uid]
+        return this.conf.synchronization!![uid]?.let { SyncFolder(it.uid, it.localFolder, it.remoteFolder) }
     }
 
     operator fun iterator(): Iterator<SyncFolder> {
-        return this.conf.synchronization!!.values.iterator()
+        return this.conf.synchronization!!.values?.map { SyncFolder(it.uid, it.localFolder, it.remoteFolder) }.iterator()
     }
 }
 

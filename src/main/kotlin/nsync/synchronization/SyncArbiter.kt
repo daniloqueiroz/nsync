@@ -3,15 +3,12 @@ package nsync.synchronization
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
 import mu.KLogging
-import nsync.FileChangedEvent
-import nsync.FolderCatalog
-import nsync.SyncFolder
+import nsync.*
 import nsync.index.AsyncFileChannelIndex
 import nsync.index.DataRecord
 import nsync.index.Index
 import nsync.index.SynchronizationStatus
 import nsync.storage.StorageResolver
-import nsync.toHexString
 import java.nio.file.Path
 import java.util.*
 
@@ -24,18 +21,30 @@ import java.util.*
 class SyncArbiter(
         private val metadataDirectory: Path,
         private val storage: StorageResolver,
-        private val catalog: FolderCatalog) {
+        private val catalog: FolderCatalog): Consumer<NSyncEvent> {
     private companion object : KLogging()
 
-    val indexes: MutableMap<String, Index> = mutableMapOf()
+    private val indexes: MutableMap<String, Index> = mutableMapOf()
 
     private fun relativePath(folder: SyncFolder, file: Path) = folder.fileRelativePath(file)
+
+    init {
+        NBus.register(this, SyncFolder::class, FileChangedEvent::class)
+    }
+
+    override suspend fun onEvent(event: NSyncEvent) {
+        when (event) {
+            is SyncFolder -> this.dirAdded(event)
+            is FileChangedEvent -> this.fileChanged(event)
+        }
+    }
+
     /**
      * Notifies that a new directory was added with the given uid.
      *
      * It creates an empty index to handle future events for that dir.
      */
-    fun dirAdded(folder: SyncFolder) {
+    private fun dirAdded(folder: SyncFolder) {
         logger.info { "Metadata index for $folder" }
         val uid = folder.uid
         val index = AsyncFileChannelIndex(this.metadataDirectory, uid)
@@ -47,7 +56,7 @@ class SyncArbiter(
      *
      * Updates the index and decide whether to notify or not the storage layer.
      */
-    suspend fun fileChanged(event: FileChangedEvent) {
+    private suspend fun fileChanged(event: FileChangedEvent) {
         val syncFolder = this.catalog.find(event.uid) ?: return
         logger.info { "File event received $event - $syncFolder" }
 
