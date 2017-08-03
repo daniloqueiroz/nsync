@@ -1,8 +1,6 @@
 package nsync.synchronization
 
 
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.nio.aRead
 import mu.KLogging
 import nsync.toHexString

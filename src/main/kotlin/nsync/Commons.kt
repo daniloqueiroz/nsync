@@ -40,15 +40,15 @@ class FolderCatalog(private val conf: Configuration) {
     }
 
     fun register(localUri: String, remoteUri: String): SyncFolder {
-        val sync = SyncFolder(UUID.randomUUID().toString(), localUri, remoteUri)
-        logger.info { "Registering new directory ${sync}" }
+        val folder = SyncFolder(UUID.randomUUID().toString(), localUri, remoteUri)
+        logger.info { "Registering new $folder" }
 
 
         val dirs: MutableMap<String, SyncFolder> = this.conf.synchronization!!
-        dirs[sync.uid] = sync
+        dirs[folder.uid] = folder
         this.conf.synchronization = dirs
 
-        return sync
+        return folder
     }
 
     fun find(uid: String): SyncFolder? {
