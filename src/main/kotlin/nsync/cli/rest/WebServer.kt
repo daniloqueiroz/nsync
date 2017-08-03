@@ -3,7 +3,6 @@ package nsync.cli.rest
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
-import nsync.SyncFolder
 import nsync.app.AddSyncFolderCmd
 import nsync.app.AppCommand
 import nsync.app.StopCmd
@@ -66,7 +65,7 @@ class WebServer(val port: Int, val application: Channel<AppCommand>) {
         val cmd = folderRequestLens.extract(req).toAppCommand()
         application.send(cmd)
         val sync = cmd.outbox.receive()
-        folderResponseLens.inject(FolderResponse(sync.uid, sync.localFolder, sync.remoteFolder), Response(OK))
+        folderResponseLens.inject(FolderResponse(sync.folderId, sync.localFolder, sync.remoteFolder), Response(OK))
     }
 
     fun start() {

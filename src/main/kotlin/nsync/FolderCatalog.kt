@@ -19,7 +19,7 @@ class FolderCatalog(private val conf: Configuration) {
 
 
         val dirs: MutableMap<String, ConfSyncFolder> = this.conf.synchronization!!
-        dirs[folder.uid] = ConfSyncFolder(folder.uid, folder.localFolder, folder.remoteFolder)
+        dirs[folder.folderId] = ConfSyncFolder(folder.folderId, folder.localFolder, folder.remoteFolder)
         this.conf.synchronization = dirs
 
         return folder

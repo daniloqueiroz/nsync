@@ -61,7 +61,7 @@ class Client(port: Int) {
 
     fun addFolder(localUri: String, remoteUri: String) {
         this.execute(this.api.addFolder(FolderRequest(localUri, remoteUri)), {
-            print("Sync folder created. Uid: ${it.uid}")
+            print("Sync folder created. Uid: ${it.folderId}")
         })
     }
 }

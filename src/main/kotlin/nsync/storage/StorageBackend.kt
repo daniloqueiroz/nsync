@@ -1,13 +1,8 @@
 package nsync.storage
 
-import nsync.FileChangedEvent
 import nsync.SyncFolder
-import nsync.index.SynchronizationStatus
-
-interface StorageResolver {
-    fun getStorageBackend(folder: SyncFolder): StorageBackend
-}
+import java.nio.file.Path
 
 interface StorageBackend {
-    suspend fun syncFile(fileEvent: FileChangedEvent, callback: (FileChangedEvent, SynchronizationStatus) -> Unit)
+    suspend fun syncFile(syncId: String, localFile: Path, folder: SyncFolder)
 }

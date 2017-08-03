@@ -2,7 +2,7 @@ package nsync.analyzer
 
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KotlinLogging
-import nsync.FileChangedEvent
+import nsync.LocalFile
 import nsync.NBus
 import nsync.SyncFolder
 import java.nio.file.Files
@@ -16,7 +16,7 @@ class DirScanner(private val record: SyncFolder): Runnable {
         Files.walk(Paths.get(record.pathLocal)).forEach({
             if (it.toFile().isFile) {
                 runBlocking {
-                    val event = FileChangedEvent(record.uid, it)
+                    val event = LocalFile(record.folderId, it)
                     try {
                         logger.debug {"Scanner find file ${event.localFilePath} - sending to arbiter"}
                         NBus.publish(event)
@@ -31,7 +31,7 @@ class DirScanner(private val record: SyncFolder): Runnable {
     companion object {
         fun scan(record: SyncFolder) {
             val scanner = Thread(DirScanner(record))
-            scanner.name = "Analyzer.scanner-worker:${record.uid}"
+            scanner.name = "Analyzer.scanner-worker:${record.folderId}"
             scanner.isDaemon = true
             scanner.start()
         }

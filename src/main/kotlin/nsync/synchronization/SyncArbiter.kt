@@ -1,14 +1,11 @@
 package nsync.synchronization
 
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.async
 import mu.KLogging
 import nsync.*
 import nsync.index.AsyncFileChannelIndex
 import nsync.index.DataRecord
 import nsync.index.Index
 import nsync.index.SynchronizationStatus
-import nsync.storage.StorageResolver
 import java.nio.file.Path
 import java.util.*
 
@@ -20,33 +17,34 @@ import java.util.*
  */
 class SyncArbiter(
         private val metadataDirectory: Path,
-        private val storage: StorageResolver,
         private val catalog: FolderCatalog) : Consumer {
     private companion object : KLogging()
 
     private val indexes: MutableMap<String, Index> = mutableMapOf()
+    private val syncs: MutableMap<String, LocalFile> = mutableMapOf()
 
     private fun relativePath(folder: SyncFolder, file: Path) = folder.fileRelativePath(file)
 
     init {
-        NBus.register(this, SyncFolder::class, FileChangedEvent::class)
+        NBus.register(this, SyncFolder::class, LocalFile::class, SyncStatus::class)
     }
 
     override suspend fun onEvent(event: NSyncEvent) {
         when (event) {
             is SyncFolder -> this.dirAdded(event)
-            is FileChangedEvent -> this.fileChanged(event)
+            is LocalFile -> this.fileChanged(event)
+            is SyncStatus -> this.syncStatusChanged(event)
         }
     }
 
     /**
-     * Notifies that a new directory was added with the given uid.
+     * Notifies that a new directory was added with the given folderId.
      *
      * It creates an empty index to handle future events for that dir.
      */
     private fun dirAdded(folder: SyncFolder) {
         logger.info { "Metadata index for $folder" }
-        val uid = folder.uid
+        val uid = folder.folderId
         val index = AsyncFileChannelIndex(this.metadataDirectory, uid)
         this.indexes[uid] = index
     }
@@ -56,51 +54,56 @@ class SyncArbiter(
      *
      * Updates the index and decide whether to notify or not the storage layer.
      */
-    private suspend fun fileChanged(event: FileChangedEvent) {
-        val syncFolder = this.catalog.find(event.uid) ?: return
-        logger.info { "File event received $event - $syncFolder" }
+    private suspend fun fileChanged(file: LocalFile) {
+        val syncFolder = this.catalog.find(file.folderId) ?: return
+        logger.info { "File file received $file - $syncFolder" }
 
-        val index = this.indexes[event.uid]!!
-        val record = this.findRecord(index, event, relativePath(syncFolder, event.localFilePath))
+        val index = this.indexes[file.folderId]!!
+        val record = this.findRecord(index, file, relativePath(syncFolder, file.localFilePath))
 
         /* TODO review states
          * for now sending pending ones are ok, maybe later we need some other intermediary state
          * such as "SCHEDULED" to tell that was already sent to storage, but isn't being transferred yet
          */
         if (record.status == SynchronizationStatus.PENDING) {
-            val backend = this.storage.getStorageBackend(syncFolder)
-            backend.syncFile(event, this::syncStatusChanged)
+            logger.info { "Requesting synchronization for file ${file.localFilePath}" }
+            val syncId = UUID.randomUUID().toString()
+            syncs[syncId] = file
+            NBus.publish(SyncRequest(syncId, file.localFilePath, syncFolder))
         }
     }
 
     /**
-     * Notifies a [SynchronizationStatus] change for the given [FileChangedEvent].
+     * Notifies a [SynchronizationStatus] change for the given [LocalFile].
      *
      * Updates the index information.
      */
-    fun syncStatusChanged(event: FileChangedEvent, newState: SynchronizationStatus) {
-        async(CommonPool) {
-            catalog.find(event.uid)?.let {
-                val relativePath = relativePath(it, event.localFilePath)
-                val index = indexes[event.uid]!!
-                val record = index[relativePath].await()!!
-                val updated = DataRecord(record.checksum, record.size, record.modificationTs, newState)
-                index[relativePath] = updated
-                logger.info { "File ${event.localFilePath} status changed from ${record.status} to ${newState}" }
-            }
+    private suspend fun syncStatusChanged(event: SyncStatus) {
+        val file = this.syncs[event.syncId]!!
+        catalog.find(file.folderId)?.let {
+            val relativePath = relativePath(it, file.localFilePath)
+            val index = indexes[file.folderId]!!
+            val record = index[relativePath].await()!!
+            val updated = DataRecord(record.checksum, record.size, record.modificationTs, event.status)
+            index[relativePath] = updated
+            logger.info { "File ${file.localFilePath} event changed from ${record.status} to ${event.status}" }
         }
     }
 
-    private suspend fun findRecord(index: Index, event: FileChangedEvent, relativePath: String): DataRecord {
+    private suspend fun findRecord(index: Index, event: LocalFile, relativePath: String): DataRecord {
         val record: DataRecord = this.createRecord(event.localFilePath)
         val currentRecord = index[relativePath].await()
         return if (Arrays.equals(record.checksum, currentRecord?.checksum)) {
-            logger.debug { "Checksum for ${event.localFilePath} matches stored checksum." +
-                    " Status: ${currentRecord?.status}" }
+            logger.debug {
+                "Checksum for ${event.localFilePath} matches stored checksum." +
+                        " Status: ${currentRecord?.status}"
+            }
             currentRecord!!
         } else {
-            logger.debug { "Checksum for ${event.localFilePath} differ. " +
-                    "Stored ${currentRecord?.checksum?.toHexString()}; Current: ${record.checksum.toHexString()}" }
+            logger.debug {
+                "Checksum for ${event.localFilePath} differ. " +
+                        "Stored ${currentRecord?.checksum?.toHexString()}; Current: ${record.checksum.toHexString()}"
+            }
             index[relativePath] = record
             record
         }

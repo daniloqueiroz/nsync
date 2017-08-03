@@ -1,12 +1,10 @@
 package nsync.storage
 
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.nio.aRead
 import kotlinx.coroutines.experimental.nio.aWrite
 import mu.KLogging
-import nsync.FileChangedEvent
-import nsync.SyncFolder
+import mu.KotlinLogging
+import nsync.*
 import nsync.index.SynchronizationStatus
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -15,22 +13,32 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 
-class LocalFileStorage(
-        private val folder: SyncFolder
-) : StorageBackend {
-    private companion object : KLogging()
+class LocalFileStorage: StorageBackend, Consumer {
+    companion object : KLogging()
 
-    override suspend fun syncFile(event: FileChangedEvent, callback: (FileChangedEvent, SynchronizationStatus) -> Unit) {
-        val src = event.localFilePath
-        val dst = Paths.get(folder.pathRemote, folder.fileRelativePath(event.localFilePath))
+    init {
+        NBus.register(this, SyncRequest::class)
+    }
+
+    suspend override fun onEvent(event: NSyncEvent) {
+        val req = event as SyncRequest
+        logger.debug {"Sync request received ${req.folder.schemeRemote}"}
+        if (req.folder.schemeRemote.equals("file")) {
+            this.syncFile(req.syncId, req.localFilePath, req.folder)
+        }
+    }
+
+    override suspend fun syncFile(syncId: String, localFile: Path, folder: SyncFolder) {
+        val src = localFile
+        val dst = Paths.get(folder.pathRemote, folder.fileRelativePath(localFile))
         logger.info { "LocalFileStorage: Transferring file $src to $dst" }
 
-        callback(event, SynchronizationStatus.TRANSFERING)
+        NBus.publish(SyncStatus(syncId, SynchronizationStatus.TRANSFERING))
         if (AsyncFileChannelTransfer(src, dst).call()) {
-            callback(event, SynchronizationStatus.SYNCHRONIZED)
+            NBus.publish(SyncStatus(syncId, SynchronizationStatus.SYNCHRONIZED))
             logger.info { "File $src successfully transferred to $dst" }
         } else {
-            callback(event, SynchronizationStatus.PENDING)
+            NBus.publish(SyncStatus(syncId, SynchronizationStatus.PENDING))
         }
     }
 }

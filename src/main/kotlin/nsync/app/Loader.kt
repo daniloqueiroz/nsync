@@ -15,6 +15,7 @@ import nsync.Configuration
 import nsync.FolderCatalog
 import nsync.analyzer.DirAnalyzer
 import nsync.cli.rest.WebServer
+import nsync.storage.LocalFileStorage
 import nsync.synchronization.SyncArbiter
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -44,8 +45,9 @@ class Loader(
                 val inbox = Channel<AppCommand>(10)
 
                 val catalog = FolderCatalog(conf)
+                LocalFileStorage()
                 DirAnalyzer()
-                SyncArbiter(Configuration.directory.resolve("metadata"), StorageResolverImpl, catalog)
+                SyncArbiter(Configuration.directory.resolve("metadata"), catalog)
                 app = Application(catalog, inbox)
 
                 logger.info { "Initializing REST WebServer" }

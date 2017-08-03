@@ -2,7 +2,7 @@ package nsync.analyzer
 
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
-import nsync.FileChangedEvent
+import nsync.LocalFile
 import nsync.NBus
 import nsync.SyncFolder
 import java.nio.file.FileSystems
@@ -42,7 +42,7 @@ class DirWatcher {
 
     fun watch(record: SyncFolder) {
         logger.info { "Watching $record" }
-        this.watch(record.uid, Paths.get(record.pathLocal))
+        this.watch(record.folderId, Paths.get(record.pathLocal))
     }
 
     private fun watch(uid: String, dir: Path) {
@@ -61,7 +61,7 @@ class DirWatcher {
                     if (entry.toFile().isDirectory) {
                         this.watch(info.uid, entry)
                     } else {
-                        NBus.publish(FileChangedEvent(info.uid, entry))
+                        NBus.publish(LocalFile(info.uid, entry))
                     }
                 }
                 ENTRY_DELETE -> println("deleted: ${it.context()}")

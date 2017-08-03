@@ -5,6 +5,7 @@ import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.yield
 import mu.KotlinLogging
+import nsync.index.SynchronizationStatus
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -58,7 +59,7 @@ interface Consumer {
 sealed class NSyncEvent
 
 data class SyncFolder(
-        val uid: String,
+        val folderId: String,
         val localFolder: String,
         val remoteFolder: String) : NSyncEvent() {
 
@@ -73,6 +74,17 @@ data class SyncFolder(
     fun fileRelativePath(localFile: Path): String = Paths.get(pathLocal).relativize(localFile).toString()
 }
 
-data class FileChangedEvent(
-        val uid: String,
+data class LocalFile(
+        val folderId: String,
         val localFilePath: Path) : NSyncEvent()
+
+data class SyncRequest(
+        val syncId: String,
+        val localFilePath: Path,
+        val folder: SyncFolder
+) : NSyncEvent()
+
+data class SyncStatus(
+        val syncId: String,
+        val status: SynchronizationStatus
+) : NSyncEvent()

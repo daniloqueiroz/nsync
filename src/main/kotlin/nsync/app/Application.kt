@@ -9,9 +9,6 @@ import mu.KLogging
 import nsync.FolderCatalog
 import nsync.NBus
 import nsync.SyncFolder
-import nsync.storage.LocalFileStorage
-import nsync.storage.StorageBackend
-import nsync.storage.StorageResolver
 
 sealed class AppCommand {
     val outbox: Channel<SyncFolder> = Channel()
@@ -83,14 +80,5 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
 
     private suspend fun registerFolder(folder: SyncFolder) {
         NBus.publish(folder)
-    }
-}
-
-internal object StorageResolverImpl : StorageResolver {
-    override fun getStorageBackend(folder: SyncFolder): StorageBackend {
-        when (folder.schemeRemote) {
-            "file" -> return LocalFileStorage(folder)
-        }
-        throw IllegalArgumentException("Not supported remote schema")
     }
 }
