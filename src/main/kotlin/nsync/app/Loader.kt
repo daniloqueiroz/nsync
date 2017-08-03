@@ -22,11 +22,9 @@ import kotlin.system.measureTimeMillis
 
 /**
  * This class is responsible by bootstrapping the application.
- *
- * It loads configuration, setups log, creates inbox channel,
- * creates and starts rest rest and creates [Application]
  */
 class Loader(
+        private val verbose: Boolean,
         private val logLevel: String,
         private val port: Int
 ) {
@@ -76,21 +74,22 @@ class Loader(
         layout.setContext(logCtx as Context)
         layout.start()
 
-        // TODO choose appender based on a cli flag
-        val logConsoleAppender = ConsoleAppender<ILoggingEvent>()
-        logConsoleAppender.setLayout(layout)
-        logConsoleAppender.context = logCtx
-        logConsoleAppender.name = "console"
-        logConsoleAppender.start()
-        log.addAppender(logConsoleAppender)
-
-        val fileConsoleAppender = FileAppender<ILoggingEvent>()
-        fileConsoleAppender.setLayout(layout)
-        fileConsoleAppender.setAppend(false)
-        fileConsoleAppender.context = logCtx
-        fileConsoleAppender.name = "file"
-        fileConsoleAppender.file = confDir.resolve("log").toString()
-        fileConsoleAppender.start()
-        log.addAppender(fileConsoleAppender)
+        if (this.verbose) {
+            val logConsoleAppender = ConsoleAppender<ILoggingEvent>()
+            logConsoleAppender.setLayout(layout)
+            logConsoleAppender.context = logCtx
+            logConsoleAppender.name = "console"
+            logConsoleAppender.start()
+            log.addAppender(logConsoleAppender)
+        } else {
+            val fileConsoleAppender = FileAppender<ILoggingEvent>()
+            fileConsoleAppender.setLayout(layout)
+            fileConsoleAppender.setAppend(false)
+            fileConsoleAppender.context = logCtx
+            fileConsoleAppender.name = "file"
+            fileConsoleAppender.file = confDir.resolve("log").toString()
+            fileConsoleAppender.start()
+            log.addAppender(fileConsoleAppender)
+        }
     }
 }
