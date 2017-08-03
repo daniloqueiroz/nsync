@@ -5,6 +5,8 @@ import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.nio.aRead
 import kotlinx.coroutines.experimental.nio.aWrite
+import kotlinx.coroutines.experimental.sync.Mutex
+import kotlinx.coroutines.experimental.sync.withLock
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousFileChannel
 import java.nio.file.Files
@@ -13,11 +15,13 @@ import java.nio.file.StandardOpenOption
 
 class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
 
-    val indexFile: Path = metadataDirectory.resolve("${uid}.index")
-    val dataFile: Path = metadataDirectory.resolve("${uid}.bin")
-    val dataChn: AsynchronousFileChannel
-    val indexChn: AsynchronousFileChannel
-    val index: MutableMap<String, IndexRecord> by lazy {
+    private val mutex = Mutex()
+    private val readBuf = ByteBuffer.allocateDirect(DataRecord.RECORD_SIZE)
+    private val indexFile: Path = metadataDirectory.resolve("${uid}.index")
+    private val dataFile: Path = metadataDirectory.resolve("${uid}.bin")
+    private val dataChn: AsynchronousFileChannel
+    private val indexChn: AsynchronousFileChannel
+    private val index: MutableMap<String, IndexRecord> by lazy {
         this.loadIndex()
     }
 
@@ -54,24 +58,28 @@ class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
     }
 
     override fun set(relativePath: String, entry: DataRecord): Deferred<Unit> = async(CommonPool) {
-        if (!contains(relativePath)) {
-            val newIndex = IndexRecord(relativePath, dataChn.size())
-            index[relativePath] = newIndex
-            indexChn.write(ByteBuffer.wrap(newIndex.toRaw().toByteArray()), indexChn.size())
-            indexChn.force(false)
-        }
+        mutex.withLock {
+            if (!contains(relativePath)) {
+                val newIndex = IndexRecord(relativePath, dataChn.size())
+                index[relativePath] = newIndex
+                indexChn.write(ByteBuffer.wrap(newIndex.toRaw().toByteArray()), indexChn.size())
+                indexChn.force(false)
+            }
 
-        val indexEntry: IndexRecord = index[relativePath]!!
-        dataChn.aWrite(entry.toRaw(), indexEntry.position)
-        dataChn.force(false)
+            val indexEntry: IndexRecord = index[relativePath]!!
+            dataChn.aWrite(entry.toRaw(), indexEntry.position)
+            dataChn.force(false)
+        }
     }
 
     override fun get(relativePath: String): Deferred<DataRecord?> = async(CommonPool) {
-        index.get(relativePath)?.let {
-            val memBuf = ByteBuffer.allocateDirect(DataRecord.RECORD_SIZE)
-            dataChn.aRead(memBuf, it.position)
-            memBuf.flip()
-            DataRecord.fromRaw(memBuf)
+        mutex.withLock {
+            index.get(relativePath)?.let {
+                readBuf.rewind()
+                dataChn.aRead(readBuf, it.position)
+                readBuf.flip()
+                DataRecord.fromRaw(readBuf)
+            }
         }
     }
 

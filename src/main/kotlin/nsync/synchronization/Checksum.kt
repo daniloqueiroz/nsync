@@ -20,18 +20,20 @@ class Checksum(val file: File) {
 
     suspend fun compute(): ByteArray {
         logger.debug { "Calculating checksum for ${file.absolutePath}" }
-        var chn = AsynchronousFileChannel.open(file.toPath(), StandardOpenOption.READ)
-        md5sum.reset()
-        var pos: Long = 0
-        do {
-            buf.rewind()
-            val read = chn!!.aRead(buf, pos)
-            pos += read
-            buf.flip()
-            md5sum.update(buf)
-        } while (read == bufSize)
-        val md5 = md5sum.digest()!!
-        logger.info { "Checksum for ${file.absolutePath} is ${md5.toHexString()}" }
-        return md5
+        AsynchronousFileChannel.open(file.toPath(), StandardOpenOption.READ).use {
+            md5sum.reset()
+            var pos: Long = 0
+            do {
+                buf.rewind()
+                val read = it.aRead(buf, pos)
+                pos += read
+                buf.flip()
+                md5sum.update(buf)
+            } while (read == bufSize)
+            val md5 = md5sum.digest()!!
+            logger.info { "Checksum for ${file.absolutePath} is ${md5.toHexString()}" }
+            return md5
+        }
+
     }
 }
