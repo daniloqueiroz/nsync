@@ -11,7 +11,9 @@ import nsync.index.DataRecord
 import nsync.index.Index
 import nsync.index.SynchronizationStatus
 import nsync.storage.StorageResolver
+import nsync.toHexString
 import java.nio.file.Path
+import java.util.*
 
 
 /**
@@ -69,7 +71,6 @@ class SyncArbiter(
      */
     fun syncStatusChanged(event: FileChangedEvent, newState: SynchronizationStatus) {
         async(CommonPool) {
-            print(catalog.find(event.uid))
             catalog.find(event.uid)?.let {
                 val relativePath = relativePath(it, event.localFilePath)
                 val index = indexes[event.uid]!!
@@ -84,9 +85,13 @@ class SyncArbiter(
     private suspend fun findRecord(index: Index, event: FileChangedEvent, relativePath: String): DataRecord {
         val record: DataRecord = this.createRecord(event.localFilePath)
         val currentRecord = index[relativePath].await()
-        return if (record.checksum == currentRecord?.checksum) {
-            currentRecord
+        return if (Arrays.equals(record.checksum, currentRecord?.checksum)) {
+            logger.debug { "Checksum for ${event.localFilePath} matches stored checksum." +
+                    " Status: ${currentRecord?.status}" }
+            currentRecord!!
         } else {
+            logger.debug { "Checksum for ${event.localFilePath} differ. " +
+                    "Stored ${currentRecord?.checksum?.toHexString()}; Current: ${record.checksum.toHexString()}" }
             index[relativePath] = record
             record
         }
