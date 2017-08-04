@@ -16,8 +16,10 @@
   * Folder Status
   * General Status
 * Error Handling / Retries
-* IO Scheduling
-  * ThreadPool tunning
+* IO Policy:  
+  Define policies (Aggressive, moderate, conservative 
+  all io points call it: delays accordingly to the policy
+* ThreadPool tuning
 * SambaStorageProvider/Index
 * File deletion support
 * Watchdog
