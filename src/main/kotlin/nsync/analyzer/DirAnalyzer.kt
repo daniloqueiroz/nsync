@@ -8,6 +8,7 @@ import nsync.SyncFolder
 
 class DirAnalyzer : Consumer {
     private val watcher = DirWatcher()
+    private val scanner = DirScanner()
 
     init {
         NBus.register(this, SyncFolder::class)
@@ -19,6 +20,6 @@ class DirAnalyzer : Consumer {
 
     private suspend fun analyze(folder: SyncFolder) {
         watcher.watch(folder)
-        DirScanner.scan(folder)
+        scanner.scan(folder)
     }
 }
