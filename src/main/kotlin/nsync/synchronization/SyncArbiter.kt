@@ -21,7 +21,6 @@ class SyncArbiter(
     private companion object : KLogging()
 
     private val indexes: MutableMap<String, Index> = mutableMapOf()
-    private val syncs: MutableMap<String, LocalFile> = mutableMapOf()
 
     private fun relativePath(folder: SyncFolder, file: Path) = folder.fileRelativePath(file)
 
@@ -67,9 +66,7 @@ class SyncArbiter(
          */
         if (record.status == SynchronizationStatus.PENDING) {
             logger.info { "Requesting synchronization for file ${file.localFilePath}" }
-            val syncId = UUID.randomUUID().toString()
-            syncs[syncId] = file
-            NBus.publish(SyncRequest(syncId, file.localFilePath, syncFolder))
+            NBus.publish(SyncRequest(file.localFilePath, syncFolder))
         }
     }
 
@@ -79,14 +76,13 @@ class SyncArbiter(
      * Updates the index information.
      */
     private suspend fun syncStatusChanged(event: SyncStatus) {
-        val file = this.syncs[event.syncId]!!
-        catalog.find(file.folderId)?.let {
-            val relativePath = relativePath(it, file.localFilePath)
-            val index = indexes[file.folderId]!!
+        catalog.find(event.folderId)?.let {
+            val relativePath = relativePath(it, event.localFilePath)
+            val index = indexes[event.folderId]!!
             val record = index[relativePath].await()!!
             val updated = DataRecord(record.checksum, record.size, record.modificationTs, event.status)
             index[relativePath] = updated
-            logger.info { "File ${file.localFilePath} event changed from ${record.status} to ${event.status}" }
+            logger.info { "File ${event.localFilePath} event changed from ${record.status} to ${event.status}" }
         }
     }
 

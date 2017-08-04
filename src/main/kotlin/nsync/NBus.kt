@@ -83,12 +83,12 @@ data class LocalFile(
         val localFilePath: Path) : NSyncEvent()
 
 data class SyncRequest(
-        val syncId: String,
         val localFilePath: Path,
         val folder: SyncFolder
 ) : NSyncEvent()
 
 data class SyncStatus(
-        val syncId: String,
+        val folderId: String,
+        val localFilePath: Path,
         val status: SynchronizationStatus
 ) : NSyncEvent()

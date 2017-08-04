@@ -25,21 +25,21 @@ class LocalFileStorage: StorageBackend, Consumer {
         val req = event as SyncRequest
         logger.debug {"Sync request received ${req.folder.schemeRemote}"}
         if (req.folder.schemeRemote.equals("file")) {
-            this.syncFile(req.syncId, req.localFilePath, req.folder)
+            this.syncFile(req.localFilePath, req.folder)
         }
     }
 
-    override suspend fun syncFile(syncId: String, localFile: Path, folder: SyncFolder) {
+    override suspend fun syncFile(localFile: Path, folder: SyncFolder) {
         val src = localFile
         val dst = Paths.get(folder.pathRemote, folder.fileRelativePath(localFile))
         logger.info { "LocalFileStorage: Transferring file $src to $dst" }
 
-        NBus.publish(SyncStatus(syncId, SynchronizationStatus.TRANSFERING))
+        NBus.publish(SyncStatus(folder.folderId, localFile, SynchronizationStatus.TRANSFERING))
         if (AsyncFileChannelTransfer(src, dst).call()) {
-            NBus.publish(SyncStatus(syncId, SynchronizationStatus.SYNCHRONIZED))
+            NBus.publish(SyncStatus(folder.folderId, localFile, SynchronizationStatus.SYNCHRONIZED))
             logger.info { "File $src successfully transferred to $dst" }
         } else {
-            NBus.publish(SyncStatus(syncId, SynchronizationStatus.PENDING))
+            NBus.publish(SyncStatus(folder.folderId, localFile, SynchronizationStatus.PENDING))
         }
     }
 }
