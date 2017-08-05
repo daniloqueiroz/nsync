@@ -4,23 +4,31 @@ File Scan -> Synchronizer -> Storage -> Remote Index File & Remote File Storage
 
 # Components
 
-* File Scanner:
+* Analyzer:
 
-    Do full folder scan and add files to synchronization queue
-    Register Directories to watch and add files to synchronization queue
-    Send full scans to sanitizer - so it can remove old files
+    Analyzes local folders - watch directories trees for  files changes and
+    do full folder scan, firing LocalFile event.
 
-* Synchronizer:
+* Sync Arbiter:
 
-    Consumes the files from the files from synchronization queue
-    Updates local database (record file, path, md5, last modification, size)
-    Implements update heuristics
+    Consumes the LocalFile events, updates local file metadata information
+    (file path, md5, last modification, size), and decide whether to fire FileTransfer
+    events.
 
 * Storage:
 
-    Takes care of the persistence logic
-    Creates/Updates the File Index
-    Writes the file and the index to the File Storage
+    Support for specific storage backend - do the actual file
+    transfer. Fires TransferStatus events.
+
+* NBus:
+
+    Message bus used for communication between the modules
+    above. Takes care of coroutine initialization and so on.
+
+* Application:
+
+    Provide entry point for implement Use Cases operations.
+    Consume and execute AppCommands.
 
 * CLI/GUI:
 

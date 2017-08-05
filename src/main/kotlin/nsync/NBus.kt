@@ -82,12 +82,12 @@ data class LocalFile(
         val folderId: String,
         val localFilePath: Path) : NSyncEvent()
 
-data class SyncRequest(
+data class FileTransfer(
         val localFilePath: Path,
         val folder: SyncFolder
 ) : NSyncEvent()
 
-data class SyncStatus(
+data class TransferStatus(
         val folderId: String,
         val localFilePath: Path,
         val status: SynchronizationStatus

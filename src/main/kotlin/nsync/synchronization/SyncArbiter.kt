@@ -25,14 +25,14 @@ class SyncArbiter(
     private fun relativePath(folder: SyncFolder, file: Path) = folder.fileRelativePath(file)
 
     init {
-        NBus.register(this, SyncFolder::class, LocalFile::class, SyncStatus::class)
+        NBus.register(this, SyncFolder::class, LocalFile::class, TransferStatus::class)
     }
 
     override suspend fun onEvent(event: NSyncEvent) {
         when (event) {
             is SyncFolder -> this.dirAdded(event)
             is LocalFile -> this.fileChanged(event)
-            is SyncStatus -> this.syncStatusChanged(event)
+            is TransferStatus -> this.syncStatusChanged(event)
         }
     }
 
@@ -66,7 +66,7 @@ class SyncArbiter(
          */
         if (record.status == SynchronizationStatus.PENDING) {
             logger.info { "Requesting synchronization for file ${file.localFilePath}" }
-            NBus.publish(SyncRequest(file.localFilePath, syncFolder))
+            NBus.publish(FileTransfer(file.localFilePath, syncFolder))
         }
     }
 
@@ -75,7 +75,7 @@ class SyncArbiter(
      *
      * Updates the index information.
      */
-    private suspend fun syncStatusChanged(event: SyncStatus) {
+    private suspend fun syncStatusChanged(event: TransferStatus) {
         catalog.find(event.folderId)?.let {
             val relativePath = relativePath(it, event.localFilePath)
             val index = indexes[event.folderId]!!

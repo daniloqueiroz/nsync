@@ -3,7 +3,6 @@ package nsync.storage
 import kotlinx.coroutines.experimental.nio.aRead
 import kotlinx.coroutines.experimental.nio.aWrite
 import mu.KLogging
-import mu.KotlinLogging
 import nsync.*
 import nsync.index.SynchronizationStatus
 import java.io.IOException
@@ -18,11 +17,11 @@ class LocalFileStorage: StorageBackend, Consumer {
     companion object : KLogging()
 
     init {
-        NBus.register(this, SyncRequest::class)
+        NBus.register(this, FileTransfer::class)
     }
 
     suspend override fun onEvent(event: NSyncEvent) {
-        val req = event as SyncRequest
+        val req = event as FileTransfer
         logger.debug {"Sync request received ${req.folder.schemeRemote}"}
         if (req.folder.schemeRemote.equals("file")) {
             this.syncFile(req.localFilePath, req.folder)
@@ -34,12 +33,12 @@ class LocalFileStorage: StorageBackend, Consumer {
         val dst = Paths.get(folder.pathRemote, folder.fileRelativePath(localFile))
         logger.info { "LocalFileStorage: Transferring file $src to $dst" }
 
-        NBus.publish(SyncStatus(folder.folderId, localFile, SynchronizationStatus.TRANSFERING))
+        NBus.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.TRANSFERING))
         if (AsyncFileChannelTransfer(src, dst).call()) {
-            NBus.publish(SyncStatus(folder.folderId, localFile, SynchronizationStatus.SYNCHRONIZED))
+            NBus.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.SYNCHRONIZED))
             logger.info { "File $src successfully transferred to $dst" }
         } else {
-            NBus.publish(SyncStatus(folder.folderId, localFile, SynchronizationStatus.PENDING))
+            NBus.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.PENDING))
         }
     }
 }
