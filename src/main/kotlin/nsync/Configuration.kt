@@ -30,7 +30,8 @@ class BinaryFileConfigurationStorage(val file: File) : ConfigurationStorage() {
 
 class Configuration(backend: ConfigurationStorage = ConfigurationStorage()) {
     companion object Constants {
-        val directory = Paths.get(System.getProperty("user.home"), ".nsync")
+        // TODO on windows use different path
+        val directory = Paths.get(System.getProperty("user.home"), ".config", "nsync")
 
         init {
             if (!Files.exists(Configuration.directory)) {
