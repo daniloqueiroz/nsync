@@ -60,7 +60,7 @@ class WebServer(val port: Int, val application: Channel<AppCommand>) {
         statusLens.inject(Status(uptimeMins), Response(OK))
     }
 
-    private fun addSyncFolder(req: Request): Response = runBlocking<Response> {
+    private fun addSyncFolder(req: Request): Response = runBlocking {
         logger.info { "Add folder request" }
         val cmd = folderRequestLens.extract(req).toAppCommand()
         application.send(cmd)
@@ -69,7 +69,7 @@ class WebServer(val port: Int, val application: Channel<AppCommand>) {
     }
 
     fun start() {
-        logger.info { "Starting REST server on port ${port}" }
+        logger.info { "Starting REST server on port $port" }
         server = apiHandler.asServer(Netty(port)).start()
     }
 

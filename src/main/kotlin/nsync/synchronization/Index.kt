@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import kotlinx.coroutines.experimental.Deferred
 
 enum class SynchronizationStatus {
-    PENDING, TRANSFERING, SYNCHRONIZED
+    PENDING, TRANSFERRING, SYNCHRONIZED
 }
 
 
@@ -42,14 +42,14 @@ data class DataRecord(
 
             return DataRecord(
                     checksum,
-                    buf.getLong(),
-                    buf.getLong(),
-                    SynchronizationStatus.values()[buf.getInt()])
+                    buf.long,
+                    buf.long,
+                    SynchronizationStatus.values()[buf.int])
         }
     }
 
     fun toRaw(): ByteBuffer {
-        val buf = ByteBuffer.allocateDirect(DataRecord.RECORD_SIZE);
+        val buf = ByteBuffer.allocateDirect(DataRecord.RECORD_SIZE)
         buf.put(checksum)
         buf.putLong(size)
         buf.putLong(modificationTs)

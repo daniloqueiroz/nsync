@@ -32,7 +32,7 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
      * This command blocks until the application stops
      */
     suspend fun start() {
-        logger.info { "Starting ${name} version ${version} " }
+        logger.info { "Starting $name version $version " }
 
         this.job = launch(CommonPool) {
             logger.info { "Loading existent folders" }
@@ -48,11 +48,11 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
 
     private suspend fun consume(inbox: Channel<AppCommand>) {
         for (msg in inbox) {
-            logger.debug { "Command ${msg} received" }
+            logger.debug { "Command $msg received" }
             try {
                 process(msg)
             } catch (err: Exception) {
-                logger.error(err) { "Error executing command ${msg}" }
+                logger.error(err) { "Error executing command $msg" }
             }
             yield()
         }
@@ -66,7 +66,7 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
     }
 
     private fun shutdown() {
-        logger.info { "Stopping ${name}" }
+        logger.info { "Stopping $name" }
         this.job?.cancel()
     }
 

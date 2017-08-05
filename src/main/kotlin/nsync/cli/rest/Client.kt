@@ -1,7 +1,6 @@
 package nsync.cli.rest
 
 
-import nsync.SyncFolder
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -26,7 +25,7 @@ interface ApiService {
                     .addConverterFactory(GsonConverterFactory.create())
                     .client(OkHttpClient())
                     .baseUrl(url)
-                    .build().create(ApiService::class.java);
+                    .build().create(ApiService::class.java)
         }
     }
 }

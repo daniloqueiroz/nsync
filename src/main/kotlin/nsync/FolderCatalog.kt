@@ -30,7 +30,7 @@ class FolderCatalog(private val conf: Configuration) {
     }
 
     operator fun iterator(): Iterator<SyncFolder> {
-        return this.conf.synchronization!!.values?.map { SyncFolder(it.uid, it.localFolder, it.remoteFolder) }.iterator()
+        return this.conf.synchronization!!.values.map { SyncFolder(it.uid, it.localFolder, it.remoteFolder) }.iterator()
     }
 }
 

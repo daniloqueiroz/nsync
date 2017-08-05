@@ -17,8 +17,8 @@ class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
 
     private val mutex = Mutex()
     private val readBuf = ByteBuffer.allocateDirect(DataRecord.RECORD_SIZE)
-    private val indexFile: Path = metadataDirectory.resolve("${uid}.index")
-    private val dataFile: Path = metadataDirectory.resolve("${uid}.bin")
+    private val indexFile: Path = metadataDirectory.resolve("$uid.index")
+    private val dataFile: Path = metadataDirectory.resolve("$uid.bin")
     private val dataChn: AsynchronousFileChannel
     private val indexChn: AsynchronousFileChannel
     private val index: MutableMap<String, IndexRecord> by lazy {
@@ -29,7 +29,7 @@ class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
         val dir = metadataDirectory.toFile()
         if (!dir.exists()) {
             dir.mkdirs()
-        } else if (!metadataDirectory.toFile().isDirectory()) {
+        } else if (!metadataDirectory.toFile().isDirectory) {
             throw IllegalArgumentException("Not a metadataDirectory")
         }
 
@@ -74,7 +74,7 @@ class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
 
     override fun get(relativePath: String): Deferred<DataRecord?> = async(CommonPool) {
         mutex.withLock {
-            index.get(relativePath)?.let {
+            index[relativePath]?.let {
                 readBuf.rewind()
                 dataChn.aRead(readBuf, it.position)
                 readBuf.flip()

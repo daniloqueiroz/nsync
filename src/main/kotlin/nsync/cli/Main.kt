@@ -36,7 +36,6 @@ fun main(args: Array<String>) {
         processCmd(parsed)
     } catch (err: Exception) {
         CommandLine.usage(commandLine, System.err)
-        err.printStackTrace()  // TODO remove it
     }
 }
 

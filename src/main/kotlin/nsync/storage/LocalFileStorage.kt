@@ -23,7 +23,7 @@ class LocalFileStorage: StorageBackend, Consumer {
     suspend override fun onEvent(event: NSyncEvent) {
         val req = event as FileTransfer
         logger.debug {"Sync request received ${req.folder.schemeRemote}"}
-        if (req.folder.schemeRemote.equals("file")) {
+        if (req.folder.schemeRemote == "file") {
             this.syncFile(req.localFilePath, req.folder)
         }
     }
@@ -33,7 +33,7 @@ class LocalFileStorage: StorageBackend, Consumer {
         val dst = Paths.get(folder.pathRemote, folder.fileRelativePath(localFile))
         logger.info { "LocalFileStorage: Transferring file $src to $dst" }
 
-        NBus.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.TRANSFERING))
+        NBus.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.TRANSFERRING))
         if (AsyncFileChannelTransfer(src, dst).call()) {
             NBus.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.SYNCHRONIZED))
             logger.info { "File $src successfully transferred to $dst" }
@@ -47,7 +47,7 @@ internal class AsyncFileChannelTransfer(val srcFile: Path, val dstFile: Path) {
     companion object : KLogging()
 
     val bufSize = 1024 * 1024  // 1MB
-    val buf = ByteBuffer.allocateDirect(bufSize)
+    val buf: ByteBuffer = ByteBuffer.allocateDirect(bufSize)
     val src: AsynchronousFileChannel by lazy { AsynchronousFileChannel.open(srcFile, StandardOpenOption.READ) }
     val dst: AsynchronousFileChannel by lazy { AsynchronousFileChannel.open(dstFile, StandardOpenOption.WRITE,
             StandardOpenOption.CREATE) }
@@ -65,10 +65,10 @@ internal class AsyncFileChannelTransfer(val srcFile: Path, val dstFile: Path) {
                     buf.flip()
                     dst.aWrite(buf, pos)
                     pos += read
-                    logger.debug { "Transferring ${srcFile} to ${dstFile}: ${pos} bytes transferred" }
+                    logger.debug { "Transferring $srcFile to $dstFile: $pos bytes transferred" }
                 } while (read == bufSize)
             } catch (err: IOException) {
-                logger.error(err) { "Error during transfer from ${srcFile} to ${dstFile}" }
+                logger.error(err) { "Error during transfer from $srcFile to $dstFile" }
                 result = false
             } finally {
                 dst.close()

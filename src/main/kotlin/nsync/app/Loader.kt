@@ -41,7 +41,7 @@ class Loader(
                         Configuration.directory.resolve("config").toFile()))
                 configureLog(Configuration.directory)
 
-                logger.info { "Bootstraping application" }
+                logger.info { "Bootstrapping application" }
                 val inbox = Channel<AppCommand>(10)
 
                 val catalog = FolderCatalog(conf)
@@ -68,12 +68,12 @@ class Loader(
         val logCtx = LoggerFactory.getILoggerFactory()
         val log = logCtx.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
         log.detachAndStopAllAppenders()
-        log.setAdditive(false)
-        log.setLevel(level ?: Level.ALL)
+        log.isAdditive = false
+        log.level = level ?: Level.ALL
 
         val layout = PatternLayout()
-        layout.setPattern("%date{yyyy-MM-dd'T'HH:mm:ss.SSS'Z', UTC} | %level | %thread | %logger{15} | %msg %ex{3} %n")
-        layout.setContext(logCtx as Context)
+        layout.pattern = "%date{yyyy-MM-dd'T'HH:mm:ss.SSS'Z', UTC} | %level | %thread | %logger{15} | %msg %ex{3} %n"
+        layout.context = logCtx as Context
         layout.start()
 
         if (this.verbose) {
@@ -86,7 +86,7 @@ class Loader(
         } else {
             val fileConsoleAppender = FileAppender<ILoggingEvent>()
             fileConsoleAppender.setLayout(layout)
-            fileConsoleAppender.setAppend(false)
+            fileConsoleAppender.isAppend = false
             fileConsoleAppender.context = logCtx
             fileConsoleAppender.name = "file"
             fileConsoleAppender.file = confDir.resolve("log").toString()

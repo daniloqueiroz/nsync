@@ -54,7 +54,7 @@ class DirWatcher {
         val info = uids[notified]!!
         notified.pollEvents().forEach {
             val entry = info.dir.resolve(it.context() as Path)
-            logger.debug { "File Event ${it.kind()} received for ${entry}" }
+            logger.debug { "File Event ${it.kind()} received for $entry" }
 
             when (it.kind()) {
                 ENTRY_CREATE -> {
