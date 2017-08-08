@@ -1,6 +1,7 @@
 package nsync.cli.rest
 
 
+import com.google.gson.Gson
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -32,14 +33,16 @@ interface ApiService {
 
 class Client(port: Int) {
     private val api: ApiService = ApiService.create("http://localhost:$port")
+    private val gson: Gson by lazy { Gson() }
 
     private fun <T> execute(call: Call<T>, onSuccess: (T) -> Unit) {
         try {
             val resp = call.execute()
-            if (!resp.isSuccessful) {
-                System.err.println("Server returned an error!")
-            } else {
+            if (resp.isSuccessful) {
                 onSuccess(resp.body()!!)
+            } else if (resp.code() == org.http4k.core.Status.BAD_REQUEST.code) {
+                val err: ErrorResponse = gson.fromJson(resp.errorBody()?.string(), ErrorResponse::class.java)
+                System.err.println("Command Failed: ${err.message}")
             }
         } catch (err: Exception) {
             System.err.println("Error executing command: ${err.message}")

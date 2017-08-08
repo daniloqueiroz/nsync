@@ -1,6 +1,5 @@
 package nsync.app
 
-import com.sun.corba.se.impl.orbutil.concurrent.Sync
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.channels.Channel
@@ -12,13 +11,26 @@ import nsync.NBus
 import nsync.SyncFolder
 import nsync.extensions.forEach
 
-sealed class AppCommand<T> {
-    val outbox: Channel<T> = Channel()
-    suspend fun receive(): T = outbox.receive()
+
+sealed class Result<T>
+data class Failure<T>(val error: Exception) : Result<T>() {
+    val message: String? = error.message
+}
+data class Success<T>(val result: T) : Result<T>()
+
+
+sealed class AppCommand<Result> {
+    private val outbox: Channel<Result> = Channel()
+    suspend fun <R> onResult(block: suspend (Result) -> R): R {
+        val result = outbox.receive()
+        return block(result)
+    }
+
+    internal suspend fun send(result: Result): Unit = outbox.send(result)
 }
 
 class StopCmd : AppCommand<Unit>()
-data class AddSyncFolderCmd(val localUri: String, val remoteUri: String) : AppCommand<SyncFolder>()
+data class AddSyncFolderCmd(val localUri: String, val remoteUri: String) : AppCommand<Result<SyncFolder>>()
 
 
 class Application(private val catalog: FolderCatalog, private val inbox: Channel<AppCommand<*>>) {
@@ -74,11 +86,14 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
     }
 
     private suspend fun addSyncDir(cmd: AddSyncFolderCmd) {
-        // TODO check if already exists, etc...
-        val record = this.catalog.register(cmd.localUri, cmd.remoteUri)
-
-        this.registerFolder(record)
-        cmd.outbox.send(record)
+        try {
+            val record = this.catalog.register(cmd.localUri, cmd.remoteUri)
+            this.registerFolder(record)
+            cmd.send(Success(record))
+        } catch (err: Exception) {
+            logger.error(err) { "Error adding folder" }
+            cmd.send(Failure(err))
+        }
     }
 
     private suspend fun registerFolder(folder: SyncFolder) {
