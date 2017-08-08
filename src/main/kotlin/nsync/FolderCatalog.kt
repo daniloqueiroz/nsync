@@ -14,6 +14,8 @@ class FolderCatalog(private val conf: Configuration) {
     }
 
     fun register(localUri: String, remoteUri: String): SyncFolder {
+        this.checkDuplicate(remoteUri)
+
         val folder = SyncFolder(UUID.randomUUID().toString(), localUri, remoteUri)
         logger.info { "Registering new $folder" }
 
@@ -25,11 +27,22 @@ class FolderCatalog(private val conf: Configuration) {
         return folder
     }
 
+    private fun checkDuplicate(remoteUri: String) {
+        this.forEach {
+            if (it.remoteFolder == remoteUri)
+                throw IllegalArgumentException("Folder is already registered")
+        }
+    }
+
     fun find(uid: String): SyncFolder? {
         return this.conf.synchronization!![uid]?.let { SyncFolder(it.uid, it.localFolder, it.remoteFolder) }
     }
 
     operator fun iterator(): Iterator<SyncFolder> {
         return this.conf.synchronization!!.values.map { SyncFolder(it.uid, it.localFolder, it.remoteFolder) }.iterator()
+    }
+
+    inline fun forEach(operation: (SyncFolder) -> Unit) : Unit {
+        for (folder in this) operation(folder)
     }
 }
