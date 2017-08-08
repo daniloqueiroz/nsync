@@ -42,7 +42,7 @@ class Loader(
                 configureLog(Configuration.directory)
 
                 logger.info { "Bootstrapping application" }
-                val inbox = Channel<AppCommand>(10)
+                val inbox = Channel<AppCommand<*>>(10)
 
                 val catalog = FolderCatalog(conf)
                 LocalFileStorage()

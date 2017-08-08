@@ -1,5 +1,6 @@
 package nsync.app
 
+import com.sun.corba.se.impl.orbutil.concurrent.Sync
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.channels.Channel
@@ -9,17 +10,18 @@ import mu.KLogging
 import nsync.FolderCatalog
 import nsync.NBus
 import nsync.SyncFolder
-import nsync.forEach
+import nsync.extensions.forEach
 
-sealed class AppCommand {
-    val outbox: Channel<SyncFolder> = Channel()
+sealed class AppCommand<T> {
+    val outbox: Channel<T> = Channel()
+    suspend fun receive(): T = outbox.receive()
 }
 
-class StopCmd : AppCommand()
-data class AddSyncFolderCmd(val localUri: String, val remoteUri: String) : AppCommand()
+class StopCmd : AppCommand<Unit>()
+data class AddSyncFolderCmd(val localUri: String, val remoteUri: String) : AppCommand<SyncFolder>()
 
 
-class Application(private val catalog: FolderCatalog, private val inbox: Channel<AppCommand>) {
+class Application(private val catalog: FolderCatalog, private val inbox: Channel<AppCommand<*>>) {
     companion object : KLogging()
 
     private val name = "NSync"
@@ -47,7 +49,7 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
         this.job?.join()
     }
 
-    private suspend fun consume(inbox: Channel<AppCommand>) {
+    private suspend fun consume(inbox: Channel<AppCommand<*>>) {
         inbox.forEach {
             logger.debug { "Command $it received" }
             try {
@@ -59,7 +61,7 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
         }
     }
 
-    private suspend fun process(msg: AppCommand) {
+    private suspend fun process(msg: AppCommand<*>) {
         when (msg) {
             is StopCmd -> this.shutdown()
             is AddSyncFolderCmd -> this.addSyncDir(msg)

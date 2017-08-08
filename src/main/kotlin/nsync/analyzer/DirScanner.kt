@@ -1,15 +1,14 @@
 package nsync.analyzer
 
 import kotlinx.coroutines.experimental.channels.Channel
-import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KotlinLogging
 import nsync.LocalFile
 import nsync.NBus
 import nsync.SyncFolder
+import nsync.extensions.forEach
 import java.io.File
 import java.nio.file.Paths
-import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
 
 class DirScanner : Runnable {
@@ -25,12 +24,12 @@ class DirScanner : Runnable {
 
     override fun run() {
         runBlocking {
-            for (record in chn) {
-                logger.debug { "Scanning $record " }
+            chn.forEach {
+                logger.debug { "Scanning $it " }
                 val time = measureTimeMillis {
-                    walk(record.folderId, Paths.get(record.pathLocal).toFile())
+                    walk(it.folderId, Paths.get(it.pathLocal).toFile())
                 }
-                logger.info { "Finished scan for $record ($time ms)" }
+                logger.info { "Finished scan for $it ($time ms)" }
             }
         }
 

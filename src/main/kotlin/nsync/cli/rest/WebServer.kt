@@ -28,7 +28,7 @@ data class FolderRequest(val localUri: String, val remoteUri: String) {
 }
 data class FolderResponse(val uid: String, val localUri: String, val remoteUri: String)
 
-class WebServer(val port: Int, val application: Channel<AppCommand>) {
+class WebServer(val port: Int, val application: Channel<AppCommand<*>>) {
     companion object : KLogging()
 
     private val startTime = Instant.now()
@@ -64,7 +64,7 @@ class WebServer(val port: Int, val application: Channel<AppCommand>) {
         logger.info { "Add folder request" }
         val cmd = folderRequestLens.extract(req).toAppCommand()
         application.send(cmd)
-        val sync = cmd.outbox.receive()
+        val sync = cmd.receive()
         folderResponseLens.inject(FolderResponse(sync.folderId, sync.localFolder, sync.remoteFolder), Response(OK))
     }
 

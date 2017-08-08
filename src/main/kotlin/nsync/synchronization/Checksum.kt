@@ -3,7 +3,7 @@ package nsync.synchronization
 
 import kotlinx.coroutines.experimental.nio.aRead
 import mu.KLogging
-import nsync.toHexString
+import nsync.extensions.toHexString
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousFileChannel

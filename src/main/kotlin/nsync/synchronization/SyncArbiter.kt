@@ -2,6 +2,7 @@ package nsync.synchronization
 
 import mu.KLogging
 import nsync.*
+import nsync.extensions.toHexString
 import nsync.index.AsyncFileChannelIndex
 import nsync.index.DataRecord
 import nsync.index.Index

@@ -5,6 +5,7 @@ import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.yield
 import mu.KotlinLogging
+import nsync.extensions.forEach
 import nsync.index.SynchronizationStatus
 import java.net.URI
 import java.nio.file.Path
@@ -20,10 +21,10 @@ object NBus {
 
     init {
         launch(CommonPool) {
-            for (event in chn) {
-                val evtType = event::class
+            chn.forEach {
+                val evtType = it::class
                 for (consumer in subscribers.getOrDefault(evtType, mutableListOf())) {
-                    dispatch(evtType, consumer, event)
+                    dispatch(evtType, consumer, it)
                 }
                 yield()
             }
