@@ -9,6 +9,7 @@ import mu.KLogging
 import nsync.FolderCatalog
 import nsync.NBus
 import nsync.SyncFolder
+import nsync.forEach
 
 sealed class AppCommand {
     val outbox: Channel<SyncFolder> = Channel()
@@ -36,8 +37,8 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
 
         this.job = launch(CommonPool) {
             logger.info { "Loading existent folders" }
-            for (folder in catalog) {
-                registerFolder(folder)
+            catalog.forEach {
+                registerFolder(it)
             }
 
             logger.info { "Initializing command listener" }
@@ -47,12 +48,12 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
     }
 
     private suspend fun consume(inbox: Channel<AppCommand>) {
-        for (msg in inbox) {
-            logger.debug { "Command $msg received" }
+        inbox.forEach {
+            logger.debug { "Command $it received" }
             try {
-                process(msg)
+                process(it)
             } catch (err: Exception) {
-                logger.error(err) { "Error executing command $msg" }
+                logger.error(err) { "Error executing command $it" }
             }
             yield()
         }
