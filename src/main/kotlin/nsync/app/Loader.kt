@@ -13,10 +13,10 @@ import mu.KLogging
 import nsync.BinaryFileConfigurationStorage
 import nsync.Configuration
 import nsync.FolderCatalog
-import nsync.analyzer.DirAnalyzer
-import nsync.cli.rest.WebServer
-import nsync.storage.LocalFileStorage
-import nsync.synchronization.SyncArbiter
+import nsync.kernel.analyzer.DirAnalyzer
+import nsync.rest.WebServer
+import nsync.kernel.storage.LocalFileStorage
+import nsync.kernel.synchronization.SyncArbiter
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.system.measureTimeMillis

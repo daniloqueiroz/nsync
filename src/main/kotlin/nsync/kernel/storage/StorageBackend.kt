@@ -1,4 +1,4 @@
-package nsync.storage
+package nsync.kernel.storage
 
 import nsync.SyncFolder
 import java.nio.file.Path

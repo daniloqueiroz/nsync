@@ -1,4 +1,4 @@
-package nsync.cli.rest
+package nsync.rest
 
 
 import com.google.gson.Gson

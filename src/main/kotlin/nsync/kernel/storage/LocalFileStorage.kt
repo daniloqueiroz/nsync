@@ -1,4 +1,4 @@
-package nsync.storage
+package nsync.kernel.storage
 
 import kotlinx.coroutines.experimental.nio.aRead
 import kotlinx.coroutines.experimental.nio.aWrite

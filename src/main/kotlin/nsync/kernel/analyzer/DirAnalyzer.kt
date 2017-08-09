@@ -1,4 +1,4 @@
-package nsync.analyzer
+package nsync.kernel.analyzer
 
 import nsync.Consumer
 import nsync.NBus

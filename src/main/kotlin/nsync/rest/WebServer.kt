@@ -1,4 +1,4 @@
-package nsync.cli.rest
+package nsync.rest
 
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.runBlocking

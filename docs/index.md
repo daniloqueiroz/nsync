@@ -1,7 +1,3 @@
-# NSync
-
-Silencio... No hay banda!
-
 NSync is a simple tool to synchronize local folders to
 remote storages, supporting different storages backends
 such as Samba/CIFS, S3 and so on and aims to support

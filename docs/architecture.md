@@ -1,8 +1,27 @@
 # Flow
 
-File Scan -> Synchronizer -> Storage -> Remote Index File & Remote File Storage
+## WebUI/CLI
+
+WebUI/CLI -(http)-> REST API <--> Application -(nbus)-> [Sync Kernel]
+
+## Sync Kernel
+
+Analyzer -(nbus)-> Arbiter -(nbus)-> Storage
 
 # Components
+* CLI/GUI:
+
+    On top of the REST API, provides access to configuration setup and operation
+    status.
+
+* REST API:
+
+    Provides access to Application resources through a HTTP RESTful API
+
+* Application:
+
+    Provide entry point for implement Use Cases operations.
+    Consume and execute AppCommands.
 
 * Analyzer:
 
@@ -24,16 +43,6 @@ File Scan -> Synchronizer -> Storage -> Remote Index File & Remote File Storage
 
     Message bus used for communication between the modules
     above. Takes care of coroutine initialization and so on.
-
-* Application:
-
-    Provide entry point for implement Use Cases operations.
-    Consume and execute AppCommands.
-
-* CLI/GUI:
-
-    On top of the REST API, provides access to configuration setup and operation
-    status.
 
 * Data Structures:
 

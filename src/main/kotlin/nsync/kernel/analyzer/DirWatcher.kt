@@ -1,4 +1,4 @@
-package nsync.analyzer
+package nsync.kernel.analyzer
 
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging

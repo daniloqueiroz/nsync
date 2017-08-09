@@ -1,4 +1,4 @@
-package nsync.synchronization
+package nsync.kernel.synchronization
 
 import mu.KLogging
 import nsync.*

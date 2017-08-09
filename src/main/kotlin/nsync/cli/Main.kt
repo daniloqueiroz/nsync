@@ -1,6 +1,6 @@
 package nsync.cli
 
-import nsync.cli.rest.Client
+import nsync.rest.Client
 import picocli.CommandLine
 
 internal interface CliCommand {
