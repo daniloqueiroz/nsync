@@ -38,7 +38,7 @@ class DirScanner : Runnable {
     private suspend fun walk(folderId: String, dir: File) {
         for (child in dir.listFiles()) {
             if (child.isFile) {
-                val event = LocalFile(folderId, child.toPath())
+                val event = LocalFile(folderId, child.toPath(), false)
                 try {
                     logger.info { "Scanner find file ${event.localFilePath}" }
                     NBus.publish(event)

@@ -41,11 +41,11 @@ class DirWatcher {
     }
 
     fun watch(record: SyncFolder) {
-        logger.info { "Watching $record" }
         this.watch(record.folderId, Paths.get(record.pathLocal))
     }
 
     private fun watch(uid: String, dir: Path) {
+        logger.info { "Watching $uid:$dir" }
         val key = dir.register(this.service, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
         uids[key] = Record(uid, dir)
     }
@@ -57,15 +57,19 @@ class DirWatcher {
             logger.debug { "File Event ${it.kind()} received for $entry" }
 
             when (it.kind()) {
-                ENTRY_CREATE -> {
-                    if (entry.toFile().isDirectory) {
-                        this.watch(info.uid, entry)
-                    } else {
-                        NBus.publish(LocalFile(info.uid, entry))
-                    }
+                ENTRY_MODIFY -> if (entry.toFile().isFile) {
+                    NBus.publish(LocalFile(info.uid, entry, false))
                 }
-                ENTRY_DELETE -> println("deleted: ${it.context()}")
-                ENTRY_MODIFY -> println("modified: ${it.context()}")
+                ENTRY_CREATE -> if (entry.toFile().isDirectory) {
+                    this.watch(info.uid, entry)
+                } else {
+                    NBus.publish(LocalFile(info.uid, entry, false))
+                }
+                ENTRY_DELETE -> if (entry.toFile().isDirectory) {
+                    uids.remove(notified)
+                } else {
+                    NBus.publish(LocalFile(info.uid, entry, true))
+                }
             }
         }
     }

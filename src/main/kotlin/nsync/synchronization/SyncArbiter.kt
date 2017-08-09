@@ -56,7 +56,7 @@ class SyncArbiter(
      */
     private suspend fun fileChanged(file: LocalFile) {
         val syncFolder = this.catalog.find(file.folderId) ?: return
-        logger.info { "File received $file" }
+        logger.info { "File event received for $file" }
 
         val index = this.indexes[file.folderId]!!
         val record = this.findRecord(index, file, relativePath(syncFolder, file.localFilePath))
@@ -88,6 +88,7 @@ class SyncArbiter(
     }
 
     private suspend fun findRecord(index: Index, event: LocalFile, relativePath: String): DataRecord {
+        // TODO handle deleted files
         val record: DataRecord = this.createRecord(event.localFilePath)
         val currentRecord = index[relativePath].await()
         return if (Arrays.equals(record.checksum, currentRecord?.checksum)) {
@@ -107,7 +108,6 @@ class SyncArbiter(
     }
 
     private suspend fun createRecord(filePath: Path): DataRecord {
-        // TODO handle deleted files
         val f = filePath.toFile()
         val size = f.length()
         val ts = f.lastModified()

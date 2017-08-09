@@ -22,9 +22,10 @@ object NBus {
     init {
         launch(CommonPool) {
             chn.forEach {
-                val evtType = it::class
-                for (consumer in subscribers.getOrDefault(evtType, mutableListOf())) {
-                    dispatch(evtType, consumer, it)
+                val event = it
+                val evtType = event::class
+                subscribers.getOrDefault(evtType, mutableListOf()).forEach {
+                    dispatch(evtType, it, event)
                 }
                 yield()
             }
@@ -37,7 +38,7 @@ object NBus {
             logger.debug { "Bus pending message: ${size.getAndDecrement()}" }
             consumer.onEvent(event)
         } catch (err: Exception) {
-            logger.error(err) { "Error dispatching event " }
+            logger.error(err) { "Error dispatching event to $consumer" }
         }
     }
 
@@ -81,7 +82,8 @@ data class SyncFolder(
 
 data class LocalFile(
         val folderId: String,
-        val localFilePath: Path) : NSyncEvent()
+        val localFilePath: Path,
+        val deleted: Boolean) : NSyncEvent()
 
 data class FileTransfer(
         val localFilePath: Path,

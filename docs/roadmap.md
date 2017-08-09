@@ -7,12 +7,14 @@
 * _Configuration layer_
 * _Initialization / Application_
 * _Folder watching_
-  * Handle modify events
-  * Handle delete events
 * _Folder scan_
+* File deletion support
+  * Event detection
+  * Scanning detection
+* Folder renaming support
 * _CLI commands (over rest)_
   * _Add Folder command_
-    * Corner cases: handle duplicates
+    * _handle duplicates_
   * Folder Status
   * General Status
 * Error Handling / Retries
@@ -21,7 +23,6 @@
   all io points call it: delays accordingly to the policy
 * ThreadPool tuning
 * SambaStorageProvider/Index
-* File deletion support
 * Watchdog
 * WEB-UI
 * Telemetry
