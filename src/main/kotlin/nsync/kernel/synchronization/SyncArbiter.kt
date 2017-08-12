@@ -30,7 +30,7 @@ class SyncArbiter(
         NBus.register(this, FolderAdded::class, FileModified::class, ChangeStatus::class)
     }
 
-    override suspend fun onEvent(msg: Signal<*>) {
+    override suspend fun handle(msg: Signal<*>) {
         when (msg) {
             is FolderAdded -> this.dirAdded(msg.payload)
             is FileModified -> this.fileChanged(msg.payload)

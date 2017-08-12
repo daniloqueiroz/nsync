@@ -17,6 +17,7 @@ import nsync.kernel.analyzer.DirAnalyzer
 import nsync.kernel.bus.NBus
 import nsync.rest.WebServer
 import nsync.kernel.storage.LocalFileStorage
+import nsync.kernel.storage.StorageManager
 import nsync.kernel.synchronization.SyncArbiter
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
@@ -46,10 +47,13 @@ class Loader(
                 val inbox = Channel<AppCommand<*>>(10)
 
                 val catalog = FolderCatalog(conf)
-                LocalFileStorage()
+
                 DirAnalyzer()
                 SyncArbiter(Configuration.directory.resolve("metadata"), catalog)
                 app = Application(catalog, inbox)
+
+                logger.info { "Loading storage drivers" }
+                StorageManager().loadDrivers()
 
                 logger.info { "Initializing REST WebServer" }
                 api = WebServer(port, inbox)

@@ -48,7 +48,7 @@ object NBus {
         try {
             logger.debug { "Dispatching ${evtType.java.simpleName} msg to ${consumer::class.java.simpleName}" }
             logger.debug { "Bus pending message: ${size.getAndDecrement()}" }
-            consumer.onEvent(msg)
+            consumer.handle(msg)
         } catch (err: Exception) {
             logger.error(err) { "Error dispatching msg to $consumer" }
         }
@@ -56,5 +56,5 @@ object NBus {
 }
 
 interface Consumer {
-    suspend fun onEvent(msg: Signal<*>)
+    suspend fun handle(msg: Signal<*>)
 }

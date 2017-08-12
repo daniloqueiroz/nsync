@@ -12,7 +12,7 @@ class DirAnalyzer : Consumer {
         NBus.register(this, FolderAdded::class)
     }
 
-    override suspend fun onEvent(msg: Signal<*>) {
+    override suspend fun handle(msg: Signal<*>) {
         this.analyze(msg.payload as SyncFolder)
     }
 

@@ -4,7 +4,6 @@ import kotlinx.coroutines.experimental.nio.aRead
 import kotlinx.coroutines.experimental.nio.aWrite
 import mu.KLogging
 import nsync.index.SynchronizationStatus
-import nsync.kernel.RemoteFile
 import nsync.kernel.SyncFolder
 import nsync.kernel.TransferStatus
 import nsync.kernel.bus.*
@@ -16,20 +15,10 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import kotlin.system.measureNanoTime
 
-class LocalFileStorage: StorageBackend, Consumer {
+class LocalFileStorage: StorageDriver {
     companion object : KLogging()
 
-    init {
-        NBus.register(this, TransferFile::class)
-    }
-
-    suspend override fun onEvent(msg: Signal<*>) {
-        val req = msg.payload as RemoteFile
-        logger.debug {"Sync request received ${req.folder.schemeRemote}"}
-        if (req.folder.schemeRemote == "file") {
-            this.syncFile(req.localFilePath, req.folder)
-        }
-    }
+    override val scheme = "file"
 
     override suspend fun syncFile(localFile: Path, folder: SyncFolder) {
         val src = localFile
