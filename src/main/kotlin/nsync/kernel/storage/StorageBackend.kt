@@ -1,6 +1,6 @@
 package nsync.kernel.storage
 
-import nsync.SyncFolder
+import nsync.kernel.SyncFolder
 import java.nio.file.Path
 
 interface StorageBackend {

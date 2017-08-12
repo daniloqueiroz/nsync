@@ -6,10 +6,9 @@ import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.yield
 import mu.KLogging
-import nsync.FolderCatalog
-import nsync.NBus
-import nsync.SyncFolder
 import nsync.extensions.forEach
+import nsync.kernel.FolderCatalog
+import nsync.kernel.SyncFolder
 
 
 sealed class Result<T>
@@ -50,11 +49,6 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
         logger.info { "Starting $name version $version " }
 
         this.job = launch(CommonPool) {
-            logger.info { "Loading existent folders" }
-            catalog.forEach {
-                registerFolder(it)
-            }
-
             logger.info { "Initializing command listener" }
             consume(inbox)
         }
@@ -88,15 +82,10 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
     private suspend fun addSyncDir(cmd: AddSyncFolderCmd) {
         try {
             val record = this.catalog.register(cmd.localUri, cmd.remoteUri)
-            this.registerFolder(record)
             cmd.send(Success(record))
         } catch (err: Exception) {
             logger.error(err) { "Error adding folder" }
             cmd.send(Failure(err))
         }
-    }
-
-    private suspend fun registerFolder(folder: SyncFolder) {
-        NBus.publish(folder)
     }
 }

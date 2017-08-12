@@ -1,12 +1,13 @@
 package nsync.kernel.synchronization
 
 import mu.KLogging
-import nsync.*
 import nsync.extensions.toHexString
 import nsync.index.AsyncFileChannelIndex
 import nsync.index.DataRecord
 import nsync.index.Index
 import nsync.index.SynchronizationStatus
+import nsync.kernel.*
+import nsync.kernel.bus.*
 import java.nio.file.Path
 import java.util.*
 
@@ -26,14 +27,14 @@ class SyncArbiter(
     private fun relativePath(folder: SyncFolder, file: Path) = folder.fileRelativePath(file)
 
     init {
-        NBus.register(this, SyncFolder::class, LocalFile::class, TransferStatus::class)
+        NBus.register(this, FolderAdded::class, FileModified::class, ChangeStatus::class)
     }
 
-    override suspend fun onEvent(event: NSyncEvent) {
-        when (event) {
-            is SyncFolder -> this.dirAdded(event)
-            is LocalFile -> this.fileChanged(event)
-            is TransferStatus -> this.syncStatusChanged(event)
+    override suspend fun onEvent(msg: Signal<*>) {
+        when (msg) {
+            is FolderAdded -> this.dirAdded(msg.payload)
+            is FileModified -> this.fileChanged(msg.payload)
+            is ChangeStatus -> this.syncStatusChanged(msg.payload)
         }
     }
 
@@ -67,7 +68,7 @@ class SyncArbiter(
          */
         if (record.status == SynchronizationStatus.PENDING) {
             logger.info { "Requesting synchronization for file ${file.localFilePath}" }
-            NBus.publish(FileTransfer(file.localFilePath, syncFolder))
+            NBus.publish(::TransferFile, RemoteFile(file.localFilePath, syncFolder))
         }
     }
 

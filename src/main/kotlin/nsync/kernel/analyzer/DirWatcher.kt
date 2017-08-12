@@ -2,9 +2,10 @@ package nsync.kernel.analyzer
 
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
-import nsync.LocalFile
-import nsync.NBus
-import nsync.SyncFolder
+import nsync.kernel.LocalFile
+import nsync.kernel.SyncFolder
+import nsync.kernel.bus.FileModified
+import nsync.kernel.bus.NBus
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -40,7 +41,7 @@ class DirWatcher {
         receiver.start()
     }
 
-    fun watch(record: SyncFolder) {
+    internal fun watch(record: SyncFolder) {
         this.watch(record.folderId, Paths.get(record.pathLocal))
     }
 
@@ -58,20 +59,23 @@ class DirWatcher {
 
             when (it.kind()) {
                 ENTRY_MODIFY -> if (entry.toFile().isFile) {
-                    NBus.publish(LocalFile(info.uid, entry, false))
+                    this.publish(LocalFile(info.uid, entry, false))
                 }
                 ENTRY_CREATE -> if (entry.toFile().isDirectory) {
                     this.watch(info.uid, entry)
                 } else {
-                    NBus.publish(LocalFile(info.uid, entry, false))
+                    this.publish(LocalFile(info.uid, entry, false))
                 }
                 ENTRY_DELETE -> if (entry.toFile().isDirectory) {
                     uids.remove(notified)
                 } else {
-                    NBus.publish(LocalFile(info.uid, entry, true))
+                    this.publish(LocalFile(info.uid, entry, true))
                 }
             }
         }
     }
 
+    private suspend fun publish(file: LocalFile) {
+        NBus.publish(::FileModified, file)
+    }
 }

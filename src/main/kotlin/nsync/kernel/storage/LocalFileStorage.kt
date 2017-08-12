@@ -3,8 +3,11 @@ package nsync.kernel.storage
 import kotlinx.coroutines.experimental.nio.aRead
 import kotlinx.coroutines.experimental.nio.aWrite
 import mu.KLogging
-import nsync.*
 import nsync.index.SynchronizationStatus
+import nsync.kernel.RemoteFile
+import nsync.kernel.SyncFolder
+import nsync.kernel.TransferStatus
+import nsync.kernel.bus.*
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousFileChannel
@@ -17,11 +20,11 @@ class LocalFileStorage: StorageBackend, Consumer {
     companion object : KLogging()
 
     init {
-        NBus.register(this, FileTransfer::class)
+        NBus.register(this, TransferFile::class)
     }
 
-    suspend override fun onEvent(event: NSyncEvent) {
-        val req = event as FileTransfer
+    suspend override fun onEvent(msg: Signal<*>) {
+        val req = msg.payload as RemoteFile
         logger.debug {"Sync request received ${req.folder.schemeRemote}"}
         if (req.folder.schemeRemote == "file") {
             this.syncFile(req.localFilePath, req.folder)
@@ -33,13 +36,17 @@ class LocalFileStorage: StorageBackend, Consumer {
         val dst = Paths.get(folder.pathRemote, folder.fileRelativePath(localFile))
         logger.info { "LocalFileStorage: Transferring file $src to $dst" }
 
-        NBus.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.TRANSFERRING))
+        this.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.TRANSFERRING))
         if (AsyncFileChannelTransfer(src, dst).call()) {
-            NBus.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.SYNCHRONIZED))
+            this.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.SYNCHRONIZED))
             logger.info { "File $src successfully transferred to $dst" }
         } else {
-            NBus.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.PENDING))
+            this.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.PENDING))
         }
+    }
+
+    private suspend fun publish(status: TransferStatus) {
+        NBus.publish(::ChangeStatus, status)
     }
 }
 

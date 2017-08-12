@@ -3,10 +3,11 @@ package nsync.kernel.analyzer
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KotlinLogging
-import nsync.LocalFile
-import nsync.NBus
-import nsync.SyncFolder
 import nsync.extensions.forEach
+import nsync.kernel.LocalFile
+import nsync.kernel.SyncFolder
+import nsync.kernel.bus.FileModified
+import nsync.kernel.bus.NBus
 import java.io.File
 import java.nio.file.Paths
 import kotlin.system.measureTimeMillis
@@ -41,7 +42,7 @@ class DirScanner : Runnable {
                 val event = LocalFile(folderId, child.toPath(), false)
                 try {
                     logger.info { "Scanner find file ${event.localFilePath}" }
-                    NBus.publish(event)
+                    NBus.publish(::FileModified, event)
                 } catch (err: Exception) {
                     logger.error(err) { "Error processing scanned file" }
                 }
@@ -51,7 +52,7 @@ class DirScanner : Runnable {
         }
     }
 
-    suspend fun scan(record: SyncFolder) {
+    internal suspend fun scan(record: SyncFolder) {
         chn.send(record)
     }
 }

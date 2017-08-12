@@ -1,9 +1,7 @@
 package nsync.kernel.analyzer
 
-import nsync.Consumer
-import nsync.NBus
-import nsync.NSyncEvent
-import nsync.SyncFolder
+import nsync.kernel.SyncFolder
+import nsync.kernel.bus.*
 
 
 class DirAnalyzer : Consumer {
@@ -11,11 +9,11 @@ class DirAnalyzer : Consumer {
     private val scanner = DirScanner()
 
     init {
-        NBus.register(this, SyncFolder::class)
+        NBus.register(this, FolderAdded::class)
     }
 
-    override suspend fun onEvent(event: NSyncEvent) {
-        this.analyze(event as SyncFolder)
+    override suspend fun onEvent(msg: Signal<*>) {
+        this.analyze(msg.payload as SyncFolder)
     }
 
     private suspend fun analyze(folder: SyncFolder) {

@@ -12,8 +12,9 @@ import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
 import nsync.BinaryFileConfigurationStorage
 import nsync.Configuration
-import nsync.FolderCatalog
+import nsync.kernel.FolderCatalog
 import nsync.kernel.analyzer.DirAnalyzer
+import nsync.kernel.bus.NBus
 import nsync.rest.WebServer
 import nsync.kernel.storage.LocalFileStorage
 import nsync.kernel.synchronization.SyncArbiter
@@ -53,6 +54,10 @@ class Loader(
                 logger.info { "Initializing REST WebServer" }
                 api = WebServer(port, inbox)
                 api?.start()
+
+                logger.info { "Starting NBus SubSystem" }
+                NBus.start()
+
             }
 
             logger.info { "Application is up! ($time ms)" }

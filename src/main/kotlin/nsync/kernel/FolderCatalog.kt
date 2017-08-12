@@ -1,6 +1,11 @@
-package nsync
+package nsync.kernel
 
+import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
+import nsync.ConfSyncFolder
+import nsync.Configuration
+import nsync.kernel.bus.FolderAdded
+import nsync.kernel.bus.NBus
 import java.util.*
 
 class FolderCatalog(private val conf: Configuration) {
@@ -8,12 +13,18 @@ class FolderCatalog(private val conf: Configuration) {
 
     init {
         if (this.conf.synchronization == null) {
-            print("initialize map")
             this.conf.synchronization = mutableMapOf()
+
+            runBlocking {
+                logger.info { "Loading existent folders" }
+                forEach {
+                    NBus.publish(::FolderAdded, it)
+                }
+            }
         }
     }
 
-    fun register(localUri: String, remoteUri: String): SyncFolder {
+    suspend fun register(localUri: String, remoteUri: String): SyncFolder {
         this.checkDuplicate(remoteUri)
 
         val folder = SyncFolder(UUID.randomUUID().toString(), localUri, remoteUri)
@@ -24,6 +35,7 @@ class FolderCatalog(private val conf: Configuration) {
         dirs[folder.folderId] = ConfSyncFolder(folder.folderId, folder.localFolder, folder.remoteFolder)
         this.conf.synchronization = dirs
 
+        NBus.publish(::FolderAdded, folder)
         return folder
     }
 
