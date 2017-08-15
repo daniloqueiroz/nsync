@@ -42,11 +42,11 @@ class WebServer(val port: Int, val application: Channel<AppCommand<*>>) {
 
     private val apiHandler = routes(
             "/admin" bind routes(
-                    "/status" to Method.GET bind this::ping,
-                    "/shutdown" to Method.POST bind this::stop
+                    "/status" bind Method.GET to this::ping,
+                    "/shutdown" bind Method.POST to this::stop
             ),
             "/rest" bind routes(
-                    "/folders" to Method.POST bind this::addSyncFolder
+                    "/folders" bind Method.POST to this::addSyncFolder
             )
     )
     private var server: Http4kServer? = null
