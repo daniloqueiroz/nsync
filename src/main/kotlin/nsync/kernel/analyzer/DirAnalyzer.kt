@@ -4,12 +4,12 @@ import nsync.kernel.SyncFolder
 import nsync.kernel.bus.*
 
 
-class DirAnalyzer : Consumer {
-    private val watcher = DirWatcher()
-    private val scanner = DirScanner()
+class DirAnalyzer(bus: NBus) : Consumer {
+    private val watcher = DirWatcher(bus)
+    private val scanner = DirScanner(bus)
 
     init {
-        NBus.register(this, FolderAdded::class)
+        bus.register(this, FolderAdded::class)
     }
 
     override suspend fun handle(msg: Signal<*>) {

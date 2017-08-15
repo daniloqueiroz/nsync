@@ -3,10 +3,10 @@ package nsync.app
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.consumeEach
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.yield
 import mu.KLogging
-import nsync.extensions.forEach
 import nsync.kernel.FolderCatalog
 import nsync.kernel.SyncFolder
 
@@ -45,18 +45,21 @@ class Application(private val catalog: FolderCatalog, private val inbox: Channel
      *
      * This command blocks until the application stops
      */
-    suspend fun start() {
+    suspend fun start(): Application {
         logger.info { "Starting $name version $version " }
 
         this.job = launch(CommonPool) {
-            logger.info { "Initializing command listener" }
             consume(inbox)
         }
+        return this
+    }
+
+    suspend fun join() {
         this.job?.join()
     }
 
     private suspend fun consume(inbox: Channel<AppCommand<*>>) {
-        inbox.forEach {
+        inbox.consumeEach {
             logger.debug { "Command $it received" }
             try {
                 process(it)

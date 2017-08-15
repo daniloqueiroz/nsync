@@ -1,16 +1,18 @@
 package nsync.kernel.bus
 
 import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.channels.Channel
+import kotlinx.coroutines.experimental.channels.consumeEach
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.yield
-import mu.KotlinLogging
-import nsync.extensions.forEach
+import mu.KLogging
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
-object NBus {
-    private val logger = KotlinLogging.logger {}
+class NBus {
+    private companion object : KLogging()
+    private var loop: Job? = null
     private val subscribers: MutableMap<KClass<*>, MutableList<Consumer>> = mutableMapOf()
     private val chn = Channel<Signal<*>>(Channel.UNLIMITED)
     private val size = AtomicInteger(0)
@@ -32,8 +34,9 @@ object NBus {
     }
 
     fun start() {
-        launch(CommonPool) {
-            chn.forEach {
+        this.loop = launch(CommonPool) {
+            logger.info { "Starting NBus service" }
+            chn.consumeEach {
                 val event = it
                 val evtType = event::class
                 subscribers.getOrDefault(evtType, mutableListOf()).forEach {
@@ -41,6 +44,13 @@ object NBus {
                 }
                 yield()
             }
+        }
+    }
+
+    fun stop() {
+        this.loop?.let {
+            logger.info { "Stopping NBus service" }
+            it.cancel()
         }
     }
 

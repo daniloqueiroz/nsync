@@ -10,24 +10,25 @@ import nsync.kernel.bus.TransferFile
 import java.nio.file.Path
 
 interface StorageDriver {
+    val bus: NBus
     val scheme: String
     suspend fun syncFile(localFile: Path, folder: SyncFolder)
 }
 
 
-class StorageManager: Consumer {
+class StorageManager(private val bus: NBus): Consumer {
     private val logger = KotlinLogging.logger {}
     private val drivers: MutableMap<String, StorageDriver> = mutableMapOf()
 
     init {
-        NBus.register(this, TransferFile::class)
+        bus.register(this, TransferFile::class)
     }
 
     fun loadDrivers() {
         // TODO change later to use this https://youtrack.jetbrains.com/issue/KT-14657
         listOf(::LocalFileStorage).forEach {
-            val drive = it()
-            logger.info { "Adding driver $drive for scheme ${drive.scheme}" }
+            val drive = it(bus)
+            logger.info { "Adding driver ${drive::class.java.canonicalName} for scheme '${drive.scheme}://'" }
             drivers[drive.scheme] = drive
         }
     }
@@ -35,6 +36,7 @@ class StorageManager: Consumer {
     suspend override fun handle(msg: Signal<*>) {
         when (msg) {
             is TransferFile -> this.transfer(msg.payload)
+            else -> logger.info { "Unexpected message: $msg" }
         }
     }
 
@@ -43,9 +45,5 @@ class StorageManager: Consumer {
             logger.info { "Redirecting file $file to $it" }
             it.syncFile(file.localFilePath, file.folder)
         }
-
     }
-
-
-
 }

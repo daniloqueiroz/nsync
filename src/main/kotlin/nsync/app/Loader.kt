@@ -16,7 +16,6 @@ import nsync.kernel.FolderCatalog
 import nsync.kernel.analyzer.DirAnalyzer
 import nsync.kernel.bus.NBus
 import nsync.rest.WebServer
-import nsync.kernel.storage.LocalFileStorage
 import nsync.kernel.storage.StorageManager
 import nsync.kernel.synchronization.SyncArbiter
 import org.slf4j.LoggerFactory
@@ -37,38 +36,47 @@ class Loader(
         try {
             var app: Application? = null
             var api: WebServer? = null
+            var bus: NBus? = null
+
             val time = measureTimeMillis {
-                logger.info { "Using Configuration from ${Configuration.directory}" }
+                logger.info { "Loading configuration from ${Configuration.directory}" }
                 val conf = Configuration(BinaryFileConfigurationStorage(
                         Configuration.directory.resolve("config").toFile()))
                 configureLog(Configuration.directory)
 
-                logger.info { "Bootstrapping application" }
-                val inbox = Channel<AppCommand<*>>(10)
+                logger.info { "Bootstrapping kernel" }
 
-                val catalog = FolderCatalog(conf)
+                logger.info { "Initializing NBus system" }
+                bus = NBus()
+                bus!!.start()
 
-                DirAnalyzer()
-                SyncArbiter(Configuration.directory.resolve("metadata"), catalog)
-                app = Application(catalog, inbox)
+                logger.info { "Initializing kernel systems" }
+                val catalog = FolderCatalog(conf, bus!!)
+                DirAnalyzer(bus!!)
+                SyncArbiter(Configuration.directory.resolve("metadata"), catalog, bus!!)
 
                 logger.info { "Loading storage drivers" }
-                StorageManager().loadDrivers()
+                StorageManager(bus!!).loadDrivers()
+
+                logger.info { "Loading application" }
+                val inbox = Channel<AppCommand<*>>(10)
+                app = Application(catalog, inbox)
 
                 logger.info { "Initializing REST WebServer" }
                 api = WebServer(port, inbox)
                 api?.start()
-
-                logger.info { "Starting NBus SubSystem" }
-                NBus.start()
-
             }
 
-            logger.info { "Application is up! ($time ms)" }
-            app?.start()
+            logger.info { "Bootstrap complete (booting time: $time ms)" }
+            val running = measureTimeMillis {
+                app!!.start().join()
+            }
+
+            logger.info { "Application has stopped (running time: $running ms)" }
+            bus?.stop()
             api?.stop()
         } catch (err: Exception) {
-            logger.error(err) { "Panic: Unable to load Application"}
+            logger.error(err) { "! Panic: Unable to load Application"}
         }
     }
 

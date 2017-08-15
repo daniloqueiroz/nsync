@@ -19,7 +19,8 @@ import java.util.*
  */
 class SyncArbiter(
         private val metadataDirectory: Path,
-        private val catalog: FolderCatalog) : Consumer {
+        private val catalog: FolderCatalog,
+        private val bus: NBus) : Consumer {
     private companion object : KLogging()
 
     private val indexes: MutableMap<String, Index> = mutableMapOf()
@@ -27,7 +28,7 @@ class SyncArbiter(
     private fun relativePath(folder: SyncFolder, file: Path) = folder.fileRelativePath(file)
 
     init {
-        NBus.register(this, FolderAdded::class, FileModified::class, ChangeStatus::class)
+        bus.register(this, FolderAdded::class, FileModified::class, ChangeStatus::class)
     }
 
     override suspend fun handle(msg: Signal<*>) {
@@ -68,7 +69,7 @@ class SyncArbiter(
          */
         if (record.status == SynchronizationStatus.PENDING) {
             logger.info { "Requesting synchronization for file ${file.localFilePath}" }
-            NBus.publish(::TransferFile, RemoteFile(file.localFilePath, syncFolder))
+            bus.publish(::TransferFile, RemoteFile(file.localFilePath, syncFolder))
         }
     }
 

@@ -2,6 +2,7 @@ package nsync
 
 import kotlinx.coroutines.experimental.runBlocking
 import nsync.kernel.FolderCatalog
+import nsync.kernel.bus.NBus
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
@@ -12,8 +13,9 @@ class FolderCatalogTest {
     private var catalog: FolderCatalog? = null
 
     @Before fun setUp() {
+        val bus = NBus()
         conf = Configuration()
-        catalog = FolderCatalog(conf!!)
+        catalog = FolderCatalog(conf!!, bus)
     }
 
     @Test fun find_NoFolder() {

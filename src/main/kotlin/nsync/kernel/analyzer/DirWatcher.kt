@@ -13,7 +13,7 @@ import java.nio.file.StandardWatchEventKinds.*
 import java.nio.file.WatchKey
 
 
-class DirWatcher {
+class DirWatcher(private val bus: NBus) {
     private data class Record(val uid: String, val dir: Path)
     private companion object : KLogging()
 
@@ -76,6 +76,6 @@ class DirWatcher {
     }
 
     private suspend fun publish(file: LocalFile) {
-        NBus.publish(::FileModified, file)
+        bus.publish(::FileModified, file)
     }
 }

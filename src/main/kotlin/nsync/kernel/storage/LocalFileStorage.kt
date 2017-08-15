@@ -15,7 +15,7 @@ import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import kotlin.system.measureNanoTime
 
-class LocalFileStorage: StorageDriver {
+class LocalFileStorage(override val bus: NBus): StorageDriver {
     companion object : KLogging()
 
     override val scheme = "file"
@@ -35,7 +35,7 @@ class LocalFileStorage: StorageDriver {
     }
 
     private suspend fun publish(status: TransferStatus) {
-        NBus.publish(::ChangeStatus, status)
+        bus.publish(::ChangeStatus, status)
     }
 }
 
