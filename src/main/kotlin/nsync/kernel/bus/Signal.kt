@@ -6,7 +6,7 @@ import nsync.kernel.SyncFolder
 import nsync.kernel.TransferStatus
 
 /**
- * Signals are any entity that are passed using NBus. All Signal are broadcast, so any component can register
+ * Signals are any entity that are passed using SignalBus. All Signal are broadcast, so any component can register
  * to receive them.
  *
  * Semantically there are two kind of Signals:
@@ -24,7 +24,9 @@ sealed class Signal<out T>(
 // Notify
 class FolderAdded(data: SyncFolder): Signal<SyncFolder>(data)
 class FileModified(data: LocalFile): Signal<LocalFile>(data)
+class FileDeleted(data: LocalFile): Signal<LocalFile>(data)
 
 // Action
 class TransferFile(data: RemoteFile) : Signal<RemoteFile>(data)
+class DeleteFile(data: RemoteFile) : Signal<RemoteFile>(data)
 class ChangeStatus(data: TransferStatus) : Signal<TransferStatus>(data)

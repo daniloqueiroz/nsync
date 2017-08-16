@@ -23,15 +23,9 @@ data class SyncFolder(
 
 data class LocalFile(
         val folderId: String,
-        val localFilePath: Path,
-        val deleted: Boolean)
+        val localFilePath: Path)
 
 data class RemoteFile(
-        val localFilePath: Path,
-        val folder: SyncFolder
-)
-
-data class FileDeletion(
         val localFilePath: Path,
         val folder: SyncFolder
 )

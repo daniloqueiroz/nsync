@@ -51,7 +51,9 @@ class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
         val hash = HashMap<String, IndexRecord>()
         Files.lines(this.indexFile).forEach {
             val indexData = IndexRecord.fromRaw(it)
-            hash.put(indexData.relativePath, indexData)
+            if (indexData.position > -1) {
+                hash.put(indexData.relativePath, indexData)
+            }
         }
         return hash
     }
@@ -84,7 +86,11 @@ class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
 
     override suspend fun remove(relativePath: String) {
         mutex.withLock {
-            // update index position to -1
+            index[relativePath]?.let {
+                val newIndex = IndexRecord(relativePath, -it.position)
+                indexChn.write(ByteBuffer.wrap(newIndex.toRaw().toByteArray()), indexChn.size())
+                index.remove(relativePath)
+            }
         }
     }
 

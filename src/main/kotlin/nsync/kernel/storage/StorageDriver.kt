@@ -3,25 +3,24 @@ package nsync.kernel.storage
 import mu.KotlinLogging
 import nsync.kernel.RemoteFile
 import nsync.kernel.SyncFolder
-import nsync.kernel.bus.Consumer
-import nsync.kernel.bus.SignalBus
-import nsync.kernel.bus.Signal
-import nsync.kernel.bus.TransferFile
+import nsync.kernel.bus.*
 import java.nio.file.Path
 
 interface StorageDriver {
     val bus: SignalBus
     val scheme: String
+
     suspend fun syncFile(localFile: Path, folder: SyncFolder)
+    suspend fun deleteFile(localFile: Path, folder: SyncFolder)
 }
 
 
-class StorageManager(private val bus: SignalBus): Consumer {
+class StorageManager(private val bus: SignalBus) : Consumer {
     private val logger = KotlinLogging.logger {}
     private val drivers: MutableMap<String, StorageDriver> = mutableMapOf()
 
     init {
-        bus.register(this, TransferFile::class)
+        bus.register(this, TransferFile::class, DeleteFile::class)
     }
 
     fun loadDrivers() {
@@ -34,16 +33,21 @@ class StorageManager(private val bus: SignalBus): Consumer {
     }
 
     suspend override fun handle(msg: Signal<*>) {
-        when (msg) {
-            is TransferFile -> this.transfer(msg.payload)
-            else -> logger.info { "Unexpected message: $msg" }
+        val file = msg.payload as RemoteFile
+        drivers[file.folder.schemeRemote]?.let {
+            when (msg) {
+                is TransferFile -> this.transfer(file, it)
+                is DeleteFile -> this.delete(file, it)
+                else -> logger.info { "Unexpected message: $msg" }
+            }
         }
     }
 
-    private suspend fun  transfer(file: RemoteFile) {
-        drivers[file.folder.schemeRemote]?.let {
-            logger.info { "Redirecting file $file to $it" }
-            it.syncFile(file.localFilePath, file.folder)
-        }
+    private suspend fun transfer(file: RemoteFile, driver: StorageDriver) {
+        driver.syncFile(file.localFilePath, file.folder)
+    }
+
+    private suspend fun delete(file: RemoteFile, driver: StorageDriver) {
+        driver.deleteFile(file.localFilePath, file.folder)
     }
 }

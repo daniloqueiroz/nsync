@@ -10,12 +10,14 @@ import nsync.kernel.bus.*
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousFileChannel
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import kotlin.system.measureNanoTime
 
 class LocalFileStorage(override val bus: SignalBus): StorageDriver {
+
     companion object : KLogging()
 
     override val scheme = "file"
@@ -32,6 +34,12 @@ class LocalFileStorage(override val bus: SignalBus): StorageDriver {
         } else {
             this.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.PENDING))
         }
+    }
+
+    suspend override fun deleteFile(localFile: Path, folder: SyncFolder) {
+        val dst = Paths.get(folder.pathRemote, folder.fileRelativePath(localFile))
+        logger.info { "LocalFileStorage: Deleting file $dst" }
+        Files.deleteIfExists(dst)
     }
 
     private suspend fun publish(status: TransferStatus) {

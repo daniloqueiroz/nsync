@@ -9,17 +9,17 @@
 * _Folder watching_
 * _Folder scan_
 * File deletion support
-  * Event detection
+  * _Event detection_
   * Scanning detection
 * Folder renaming support
-* Folder stats on Catalog/SyncFolder
+* *Folder stats on Catalog/SyncFolder*
   * simple stats such number of files in each state
 * _CLI commands (over rest)_
   * _Add Folder command_
     * _handle duplicates_
   * Folder Status
   * General Status
-* Index cleanup
+* Index/Metadata cleanup
 * Error Handling / Retries
 * IO Policy:  
   Define policies (Aggressive, moderate, conservative 

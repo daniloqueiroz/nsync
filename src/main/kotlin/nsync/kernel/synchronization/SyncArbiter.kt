@@ -28,13 +28,14 @@ class SyncArbiter(
     private fun relativePath(folder: SyncFolder, file: Path) = folder.fileRelativePath(file)
 
     init {
-        bus.register(this, FolderAdded::class, FileModified::class, ChangeStatus::class)
+        bus.register(this, FolderAdded::class, FileDeleted::class, FileModified::class, ChangeStatus::class)
     }
 
     override suspend fun handle(msg: Signal<*>) {
         when (msg) {
             is FolderAdded -> this.dirAdded(msg.payload)
             is FileModified -> this.fileChanged(msg.payload)
+            is FileDeleted -> this.fileDeleted(msg.payload)
             is ChangeStatus -> this.syncStatusChanged(msg.payload)
         }
     }
@@ -70,6 +71,17 @@ class SyncArbiter(
         if (record.status == SynchronizationStatus.PENDING) {
             logger.info { "Requesting synchronization for file ${file.localFilePath}" }
             bus.publish(::TransferFile, RemoteFile(file.localFilePath, syncFolder))
+        }
+    }
+
+    private suspend fun fileDeleted(file: LocalFile) {
+        val syncFolder = this.catalog.find(file.folderId) ?: return
+        logger.info { "File event received for $file" }
+
+        this.indexes[file.folderId]?.let {
+            it.remove(relativePath(syncFolder, file.localFilePath))
+
+            bus.publish(::DeleteFile, RemoteFile(file.localFilePath, syncFolder))
         }
     }
 

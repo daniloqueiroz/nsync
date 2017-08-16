@@ -4,6 +4,7 @@ import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
 import nsync.kernel.LocalFile
 import nsync.kernel.SyncFolder
+import nsync.kernel.bus.FileDeleted
 import nsync.kernel.bus.FileModified
 import nsync.kernel.bus.SignalBus
 import java.nio.file.FileSystems
@@ -59,23 +60,23 @@ class DirWatcher(private val bus: SignalBus) {
 
             when (it.kind()) {
                 ENTRY_MODIFY -> if (entry.toFile().isFile) {
-                    this.publish(LocalFile(info.uid, entry, false))
+                    this.publish(LocalFile(info.uid, entry), false)
                 }
                 ENTRY_CREATE -> if (entry.toFile().isDirectory) {
                     this.watch(info.uid, entry)
                 } else {
-                    this.publish(LocalFile(info.uid, entry, false))
+                    this.publish(LocalFile(info.uid, entry), false)
                 }
                 ENTRY_DELETE -> if (entry.toFile().isDirectory) {
                     uids.remove(notified)
                 } else {
-                    this.publish(LocalFile(info.uid, entry, true))
+                    this.publish(LocalFile(info.uid, entry), true)
                 }
             }
         }
     }
 
-    private suspend fun publish(file: LocalFile) {
-        bus.publish(::FileModified, file)
+    private suspend fun publish(file: LocalFile, deleted: Boolean) {
+        bus.publish(if (deleted) ::FileDeleted else ::FileModified, file)
     }
 }
