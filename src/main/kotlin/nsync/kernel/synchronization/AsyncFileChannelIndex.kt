@@ -14,7 +14,6 @@ import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
 class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
-
     private val mutex = Mutex()
     private val readBuf = ByteBuffer.allocateDirect(DataRecord.RECORD_SIZE)
     private val indexFile: Path = metadataDirectory.resolve("$uid.index")
@@ -57,7 +56,7 @@ class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
         return hash
     }
 
-    override fun set(relativePath: String, entry: DataRecord): Deferred<Unit> = async(CommonPool) {
+    override suspend fun set(relativePath: String, entry: DataRecord) {
         mutex.withLock {
             if (!contains(relativePath)) {
                 val newIndex = IndexRecord(relativePath, dataChn.size())
@@ -72,8 +71,8 @@ class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
         }
     }
 
-    override fun get(relativePath: String): Deferred<DataRecord?> = async(CommonPool) {
-        mutex.withLock {
+    override suspend fun get(relativePath: String): DataRecord? {
+       return mutex.withLock {
             index[relativePath]?.let {
                 readBuf.rewind()
                 dataChn.aRead(readBuf, it.position)
@@ -83,7 +82,13 @@ class AsyncFileChannelIndex(metadataDirectory: Path, uid: String) : Index {
         }
     }
 
-    override fun contains(relativePath: String): Boolean {
+    override suspend fun remove(relativePath: String) {
+        mutex.withLock {
+            // update index position to -1
+        }
+    }
+
+    override suspend fun contains(relativePath: String): Boolean {
         return relativePath in this.index
     }
 }

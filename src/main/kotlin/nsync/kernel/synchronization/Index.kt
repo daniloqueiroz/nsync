@@ -2,6 +2,7 @@ package nsync.index
 
 import java.nio.ByteBuffer
 import kotlinx.coroutines.experimental.Deferred
+import java.util.*
 
 enum class SynchronizationStatus {
     PENDING, TRANSFERRING, SYNCHRONIZED
@@ -58,11 +59,34 @@ data class DataRecord(
         return buf
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as DataRecord
+
+        if (!Arrays.equals(checksum, other.checksum)) return false
+        if (size != other.size) return false
+        if (modificationTs != other.modificationTs) return false
+        if (status != other.status) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = Arrays.hashCode(checksum)
+        result = 31 * result + size.hashCode()
+        result = 31 * result + modificationTs.hashCode()
+        result = 31 * result + status.hashCode()
+        return result
+    }
+
 }
 
 interface Index {
-    operator fun set(relativePath: String, entry: DataRecord): Deferred<Unit>
-    operator fun get(relativePath: String): Deferred<DataRecord?>
-    operator fun contains(relativePath: String): Boolean
+    suspend fun set(relativePath: String, entry: DataRecord): Unit
+    suspend fun get(relativePath: String): DataRecord?
+    suspend fun contains(relativePath: String): Boolean
+    suspend fun remove(relativePath: String): Unit
 }
 

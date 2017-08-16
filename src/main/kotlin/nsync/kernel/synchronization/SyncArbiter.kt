@@ -82,17 +82,18 @@ class SyncArbiter(
         catalog.find(event.folderId)?.let {
             val relativePath = relativePath(it, event.localFilePath)
             val index = indexes[event.folderId]!!
-            val record = index[relativePath].await()!!
-            val updated = DataRecord(record.checksum, record.size, record.modificationTs, event.status)
-            index[relativePath] = updated
-            logger.info { "File ${event.localFilePath} event changed from ${record.status} to ${event.status}" }
+            index.get(relativePath)?.let {
+                val updated = DataRecord(it.checksum, it.size, it.modificationTs, event.status)
+                index.set(relativePath, updated)
+                logger.info { "File ${event.localFilePath} event changed from ${it.status} to ${event.status}" }
+            }
         }
     }
 
     private suspend fun findRecord(index: Index, event: LocalFile, relativePath: String): DataRecord {
         // TODO handle deleted files
         val record: DataRecord = this.createRecord(event.localFilePath)
-        val currentRecord = index[relativePath].await()
+        val currentRecord = index.get(relativePath)
         return if (Arrays.equals(record.checksum, currentRecord?.checksum)) {
             logger.debug {
                 "Checksum for ${event.localFilePath} matches stored checksum." +
@@ -104,7 +105,7 @@ class SyncArbiter(
                 "Checksum for ${event.localFilePath} differ. " +
                         "Stored ${currentRecord?.checksum?.toHexString()}; Current: ${record.checksum.toHexString()}"
             }
-            index[relativePath] = record
+            index.set(relativePath, record)
             record
         }
     }
