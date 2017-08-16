@@ -5,7 +5,7 @@ import mu.KLogging
 import nsync.kernel.LocalFile
 import nsync.kernel.SyncFolder
 import nsync.kernel.bus.FileModified
-import nsync.kernel.bus.NBus
+import nsync.kernel.bus.SignalBus
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -13,7 +13,7 @@ import java.nio.file.StandardWatchEventKinds.*
 import java.nio.file.WatchKey
 
 
-class DirWatcher(private val bus: NBus) {
+class DirWatcher(private val bus: SignalBus) {
     private data class Record(val uid: String, val dir: Path)
     private companion object : KLogging()
 

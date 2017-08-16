@@ -4,19 +4,19 @@ import mu.KotlinLogging
 import nsync.kernel.RemoteFile
 import nsync.kernel.SyncFolder
 import nsync.kernel.bus.Consumer
-import nsync.kernel.bus.NBus
+import nsync.kernel.bus.SignalBus
 import nsync.kernel.bus.Signal
 import nsync.kernel.bus.TransferFile
 import java.nio.file.Path
 
 interface StorageDriver {
-    val bus: NBus
+    val bus: SignalBus
     val scheme: String
     suspend fun syncFile(localFile: Path, folder: SyncFolder)
 }
 
 
-class StorageManager(private val bus: NBus): Consumer {
+class StorageManager(private val bus: SignalBus): Consumer {
     private val logger = KotlinLogging.logger {}
     private val drivers: MutableMap<String, StorageDriver> = mutableMapOf()
 

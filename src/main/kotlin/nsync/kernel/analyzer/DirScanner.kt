@@ -7,12 +7,12 @@ import mu.KotlinLogging
 import nsync.kernel.LocalFile
 import nsync.kernel.SyncFolder
 import nsync.kernel.bus.FileModified
-import nsync.kernel.bus.NBus
+import nsync.kernel.bus.SignalBus
 import java.io.File
 import java.nio.file.Paths
 import kotlin.system.measureTimeMillis
 
-class DirScanner(private val bus: NBus) : Runnable {
+class DirScanner(private val bus: SignalBus) : Runnable {
     private val logger = KotlinLogging.logger {}
     private val chn = Channel<SyncFolder>()
 
@@ -39,7 +39,7 @@ class DirScanner(private val bus: NBus) : Runnable {
     private suspend fun walk(folderId: String, dir: File) {
         for (child in dir.listFiles()) {
             if (child.isFile) {
-                val event = LocalFile(folderId, child.toPath(), false)
+                val event = LocalFile(folderId, child.toPath())
                 try {
                     logger.info { "Scanner find file ${event.localFilePath}" }
                     bus.publish(::FileModified, event)

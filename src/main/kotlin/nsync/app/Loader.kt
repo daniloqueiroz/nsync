@@ -14,7 +14,8 @@ import nsync.BinaryFileConfigurationStorage
 import nsync.Configuration
 import nsync.kernel.FolderCatalog
 import nsync.kernel.analyzer.DirAnalyzer
-import nsync.kernel.bus.NBus
+import nsync.kernel.bus.AsyncBus
+import nsync.kernel.bus.SignalBus
 import nsync.rest.WebServer
 import nsync.kernel.storage.StorageManager
 import nsync.kernel.synchronization.SyncArbiter
@@ -36,7 +37,7 @@ class Loader(
         try {
             var app: Application? = null
             var api: WebServer? = null
-            var bus: NBus? = null
+            var bus: SignalBus? = null
 
             val time = measureTimeMillis {
                 logger.info { "Loading configuration from ${Configuration.directory}" }
@@ -46,8 +47,8 @@ class Loader(
 
                 logger.info { "Bootstrapping kernel" }
 
-                logger.info { "Initializing NBus system" }
-                bus = NBus()
+                logger.info { "Initializing SignalBus system" }
+                bus = AsyncBus()
                 bus!!.start()
 
                 logger.info { "Initializing kernel systems" }

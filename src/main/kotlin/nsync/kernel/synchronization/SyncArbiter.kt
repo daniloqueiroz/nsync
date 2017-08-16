@@ -20,7 +20,7 @@ import java.util.*
 class SyncArbiter(
         private val metadataDirectory: Path,
         private val catalog: FolderCatalog,
-        private val bus: NBus) : Consumer {
+        private val bus: SignalBus) : Consumer {
     private companion object : KLogging()
 
     private val indexes: MutableMap<String, Index> = mutableMapOf()

@@ -4,7 +4,7 @@ import nsync.kernel.SyncFolder
 import nsync.kernel.bus.*
 
 
-class DirAnalyzer(bus: NBus) : Consumer {
+class DirAnalyzer(bus: SignalBus) : Consumer {
     private val watcher = DirWatcher(bus)
     private val scanner = DirScanner(bus)
 
