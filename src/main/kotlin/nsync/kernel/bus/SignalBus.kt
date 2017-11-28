@@ -20,6 +20,7 @@ interface SignalBus {
 
     fun start()
     fun stop()
+    suspend fun join()
 }
 
 class AsyncBus : SignalBus {
@@ -49,6 +50,10 @@ class AsyncBus : SignalBus {
             logger.info { "Stopping SignalBus service" }
             it.cancel()
         }
+    }
+
+    override suspend fun join() {
+        this.loop?.join()
     }
 
     override fun register(consumer: Consumer, vararg evtTypes: KClass<*>) {

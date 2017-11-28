@@ -1,7 +1,10 @@
-package nsync.rest
+package nsync.ui.rest
 
 
 import com.google.gson.Gson
+import nsync.utils.Failure
+import nsync.utils.Result
+import nsync.utils.Success
 import okhttp3.OkHttpClient
 import retrofit2.Call
 import retrofit2.Retrofit
@@ -32,7 +35,8 @@ interface ApiService {
 }
 
 class Client(port: Int) {
-    private val api: ApiService = ApiService.create("http://localhost:$port")
+    val api: ApiService = ApiService.create("http://localhost:$port")
+
     private val gson: Gson by lazy { Gson() }
 
     private fun <T> execute(call: Call<T>, onSuccess: (T) -> Unit) {
@@ -49,16 +53,20 @@ class Client(port: Int) {
         }
     }
 
-    fun status() {
-        this.execute(this.api.status(), {
-            print("Server is running. Uptime: ${it.uptimeMins} minutes")
-        })
-    }
-
-    fun shutdown() {
-        this.execute(this.api.shutdown(), {
-            print("Server is shutting down. Uptime: ${it.uptimeMins} minutes")
-        })
+    operator fun <T> invoke(call: Call<T>): Result<T> {
+        try {
+            val resp = call.execute()
+            return if (resp.isSuccessful) {
+                Success(resp.body()!!)
+            } else if (resp.code() == org.http4k.core.Status.BAD_REQUEST.code) {
+                val err: ErrorResponse = gson.fromJson(resp.errorBody()?.string(), ErrorResponse::class.java)
+                Failure<T>(Exception(err.message!!))
+            } else {
+                Failure<T>(Exception("Unexpected response: ${resp.code()}"))
+            }
+        } catch (err: Exception) {
+            return Failure<T>(err)
+        }
     }
 
     fun addFolder(localUri: String, remoteUri: String) {

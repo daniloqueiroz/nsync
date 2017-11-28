@@ -1,14 +1,11 @@
-package nsync.rest
+package nsync.ui.rest
 
-import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
-import nsync.app.*
 import org.http4k.core.Body
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
-import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.core.Status.Companion.OK
 import org.http4k.format.Gson.auto
 import org.http4k.routing.bind
@@ -20,16 +17,11 @@ import java.time.Duration
 import java.time.Instant
 
 data class Status(val uptimeMins: Long)
-data class FolderRequest(val localUri: String, val remoteUri: String) {
-    fun toAppCommand(): AddSyncFolderCmd {
-        return AddSyncFolderCmd(this.localUri, this.remoteUri)
-    }
-}
-
+data class FolderRequest(val localUri: String, val remoteUri: String)
 data class FolderResponse(val uid: String, val localUri: String, val remoteUri: String)
 data class ErrorResponse(val message: String?)
 
-class WebServer(val port: Int, val application: Channel<AppCommand<*>>) {
+class WebServer(val port: Int) {
     companion object : KLogging()
 
     private val startTime = Instant.now()
@@ -58,22 +50,23 @@ class WebServer(val port: Int, val application: Channel<AppCommand<*>>) {
 
     private fun stop(req: Request): Response = runBlocking<Response> {
         logger.info { "Shutdown request" }
-        application.send(StopCmd())
-        statusLens.inject(Status(uptimeMins), Response(OK))
+        Response(OK)
+//        ui.send(StopCmd())
+//        statusLens.inject(Status(uptimeMins), Response(OK))
     }
 
     private fun addSyncFolder(req: Request): Response = runBlocking {
         logger.info { "Add folder request" }
-        val cmd = folderRequestLens.extract(req).toAppCommand()
-        application.send(cmd)
-        cmd.onResult {
-            when (it) {
-                is Success -> folderResponseLens.inject(FolderResponse(
-                        it.result.folderId, it.result.localFolder, it.result.remoteFolder), Response(OK))
-                is Failure -> errorResponseLens.inject(ErrorResponse(it.message), Response(BAD_REQUEST))
-            }
-        }
-
+        Response(OK)
+//        val cmd = folderRequestLens.extract(req).toAppCommand()
+//        ui.send(cmd)
+//        cmd.onResult {
+//            when (it) {
+//                is Success -> folderResponseLens.inject(FolderResponse(
+//                        it.value.folderId, it.value.localFolder, it.value.remoteFolder), Response(OK))
+//                is Failure -> errorResponseLens.inject(ErrorResponse(it.message), Response(BAD_REQUEST))
+//            }
+//        }
     }
 
     fun start() {

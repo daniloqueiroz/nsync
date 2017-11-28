@@ -29,6 +29,8 @@ class SimpleBus: SignalBus {
         }
     }
 
+    override suspend fun join() {}
+
     fun reset() {
         signals.clear()
         consumers.clear()

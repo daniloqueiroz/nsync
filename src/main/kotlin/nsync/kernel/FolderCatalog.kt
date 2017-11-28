@@ -2,6 +2,7 @@ package nsync.kernel
 
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
+import mu.KotlinLogging
 import nsync.ConfSyncFolder
 import nsync.Configuration
 import nsync.kernel.bus.FolderAdded
@@ -9,7 +10,7 @@ import nsync.kernel.bus.SignalBus
 import java.util.*
 
 class FolderCatalog(private val conf: Configuration, val bus: SignalBus) {
-    companion object : KLogging()
+    private companion object : KLogging()
 
     init {
         if (this.conf.synchronization == null) {

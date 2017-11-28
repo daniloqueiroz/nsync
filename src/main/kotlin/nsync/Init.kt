@@ -1,4 +1,4 @@
-package nsync.app
+package nsync
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
@@ -7,26 +7,24 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.core.ConsoleAppender
 import ch.qos.logback.core.Context
 import ch.qos.logback.core.FileAppender
-import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
-import nsync.BinaryFileConfigurationStorage
-import nsync.Configuration
 import nsync.kernel.FolderCatalog
 import nsync.kernel.analyzer.DirAnalyzer
 import nsync.kernel.bus.AsyncBus
 import nsync.kernel.bus.SignalBus
-import nsync.rest.WebServer
+import nsync.ui.rest.WebServer
 import nsync.kernel.storage.StorageManager
 import nsync.kernel.synchronization.SyncArbiter
+import nsync.ui.cli.BaseCommand
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.system.measureTimeMillis
 
 /**
- * This class is responsible by bootstrapping the application.
+ * This class is responsible by bootstrapping the ui.
  */
-class Loader(
+class Init(
         private val verbose: Boolean,
         private val logLevel: String,
         private val port: Int
@@ -35,7 +33,6 @@ class Loader(
 
     fun boot() = runBlocking<Unit> {
         try {
-            var app: Application? = null
             var api: WebServer? = null
             var bus: SignalBus? = null
 
@@ -59,18 +56,17 @@ class Loader(
                 logger.info { "Loading storage drivers" }
                 StorageManager(bus!!).loadDrivers()
 
-                logger.info { "Loading application" }
-                val inbox = Channel<AppCommand<*>>(10)
-                app = Application(catalog, inbox)
-
                 logger.info { "Initializing REST WebServer" }
-                api = WebServer(port, inbox)
+                api = WebServer(port)
                 api?.start()
             }
 
             logger.info { "Bootstrap complete (booting time: $time ms)" }
             val running = measureTimeMillis {
-                app!!.start().join()
+                bus?.let{
+                    it.start()
+                    it.join()
+                }
             }
 
             logger.info { "Application has stopped (running time: $running ms)" }
@@ -112,4 +108,10 @@ class Loader(
             log.addAppender(fileConsoleAppender)
         }
     }
+}
+
+
+fun main(args: Array<String>) {
+    val interpreter = BaseCommand(args)
+    interpreter()
 }

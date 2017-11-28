@@ -12,14 +12,13 @@ plugins {
     id 'application'
     id 'jacoco'
     id 'org.jetbrains.kotlin.jvm' version '1.1.51'
-    id 'com.github.ben-manes.versions' version '0.15.0'
+    id 'com.github.ben-manes.versions' version '0.17.0'
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_8
-targetCompatibility = JavaVersion.VERSION_1_8
+sourceCompatibility = JavaVersion.VERSION_1_9
+targetCompatibility = JavaVersion.VERSION_1_9
 
-mainClassName = 'nsync.cli.MainKt'
-version = '1.0'
+mainClassName = 'nsync.InitKt'
 
 repositories {
     jcenter()
@@ -31,8 +30,8 @@ dependencies {
             'org.jetbrains.kotlin:kotlin-stdlib',
             "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version",
 
-            'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.17',
-            'org.jetbrains.kotlinx:kotlinx-coroutines-nio:0.17',
+            'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.19',
+            'org.jetbrains.kotlinx:kotlinx-coroutines-nio:0.19',
             
             'org.mapdb:mapdb:3.0.5',
 
@@ -41,15 +40,15 @@ dependencies {
             'ch.qos.logback:logback-core:1.2.3',
             'org.slf4j:slf4j-api:1.7.25',
 
-            'org.http4k:http4k-core:2.19.0',
-            'org.http4k:http4k-server-netty:2.19.0',
-            'org.http4k:http4k-client-okhttp:2.19.0',
-            'org.http4k:http4k-format-gson:2.19.0',
+            'org.http4k:http4k-core:2.38.0',
+            'org.http4k:http4k-server-netty:2.38.0',
+            'org.http4k:http4k-client-okhttp:2.38.0',
+            'org.http4k:http4k-format-gson:2.38.0',
 
             'com.squareup.retrofit2:retrofit:2.3.0',
             'com.squareup.retrofit2:converter-gson:2.3.0',
 
-            'info.picocli:picocli:0.9.7',
+            'info.picocli:picocli:2.0.3',
     )
 
     testCompile(
@@ -85,5 +84,5 @@ jacocoTestReport {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '4.2.1'
+    gradleVersion = '4.3.1'
 }
