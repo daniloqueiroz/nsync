@@ -1,6 +1,6 @@
 package nsync.kernel
 
-import nsync.index.SynchronizationStatus
+import nsync.kernel.metadata.Status
 import java.net.URI
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -33,5 +33,5 @@ data class RemoteFile(
 data class TransferStatus(
         val folderId: String,
         val localFilePath: Path,
-        val status: SynchronizationStatus
+        val status: Status
 )

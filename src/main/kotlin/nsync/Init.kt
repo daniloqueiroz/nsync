@@ -9,14 +9,13 @@ import ch.qos.logback.core.Context
 import ch.qos.logback.core.FileAppender
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
-import nsync.kernel.FolderCatalog
 import nsync.kernel.analyzer.DirAnalyzer
 import nsync.kernel.bus.AsyncBus
 import nsync.kernel.bus.SignalBus
-import nsync.ui.rest.WebServer
 import nsync.kernel.storage.StorageManager
 import nsync.kernel.synchronization.SyncArbiter
 import nsync.ui.cli.BaseCommand
+import nsync.ui.rest.WebServer
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
 import kotlin.system.measureTimeMillis
@@ -33,47 +32,25 @@ class Init(
 
     fun boot() = runBlocking<Unit> {
         try {
-            var api: WebServer? = null
-            var bus: SignalBus? = null
+            configureLog(Configuration.directory)
+            logger.info { "Bootstrapping kernel" }
+            val bus: SignalBus = loadKernel()
+            logger.info { "Initializing REST WebServer" }
+            val app = initApp()
 
-            val time = measureTimeMillis {
-                logger.info { "Loading configuration from ${Configuration.directory}" }
-                val conf = Configuration(BinaryFileConfigurationStorage(
-                        Configuration.directory.resolve("config").toFile()))
-                configureLog(Configuration.directory)
-
-                logger.info { "Bootstrapping kernel" }
-
-                logger.info { "Initializing SignalBus system" }
-                bus = AsyncBus()
-                bus!!.start()
-
-                logger.info { "Initializing kernel systems" }
-                val catalog = FolderCatalog(conf, bus!!)
-                DirAnalyzer(bus!!)
-                SyncArbiter(Configuration.directory.resolve("metadata"), catalog, bus!!)
-
-                logger.info { "Loading storage drivers" }
-                StorageManager(bus!!).loadDrivers()
-
-                logger.info { "Initializing REST WebServer" }
-                api = WebServer(port)
-                api?.start()
-            }
-
-            logger.info { "Bootstrap complete (booting time: $time ms)" }
             val running = measureTimeMillis {
-                bus?.let{
+                bus.let {
                     it.start()
                     it.join()
                 }
+
+                app.stop()
+                bus.stop()
             }
 
             logger.info { "Application has stopped (running time: $running ms)" }
-            bus?.stop()
-            api?.stop()
         } catch (err: Exception) {
-            logger.error(err) { "! Panic: Unable to load Application"}
+            logger.error(err) { "! Panic: Unable to load Application" }
         }
     }
 
@@ -107,6 +84,28 @@ class Init(
             fileConsoleAppender.start()
             log.addAppender(fileConsoleAppender)
         }
+    }
+
+    private fun loadKernel(): SignalBus {
+        logger.info { "Initializing SignalBus system" }
+        val bus = AsyncBus()
+        bus.start()
+
+        logger.info { "Initializing kernel servers" }
+        DirAnalyzer(bus)
+        SyncArbiter(bus)
+        val storage = StorageManager(bus)
+
+        logger.info { "Loading storage drivers" }
+        storage.loadDrivers()
+
+        return bus
+    }
+
+    private fun initApp(): WebServer {
+        val api = WebServer(port)
+        api.start()
+        return api
     }
 }
 

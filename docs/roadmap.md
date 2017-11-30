@@ -8,6 +8,8 @@
 * _Initialization / Application_
 * _Folder watching_
 * _Folder scan_
+* URN identifier for files (nsync:folder_id\[:file_id\])
+* Metrics
 * File deletion support
   * _Event detection_
   * Scanning detection

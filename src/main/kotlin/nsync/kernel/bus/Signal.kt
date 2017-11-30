@@ -22,6 +22,7 @@ sealed class Signal<out T>(
 )
 
 // Notify
+// TODO FSAdded
 class FolderAdded(data: SyncFolder): Signal<SyncFolder>(data)
 class FileModified(data: LocalFile): Signal<LocalFile>(data)
 class FileDeleted(data: LocalFile): Signal<LocalFile>(data)

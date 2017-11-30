@@ -3,10 +3,10 @@ package nsync.kernel.storage
 import kotlinx.coroutines.experimental.nio.aRead
 import kotlinx.coroutines.experimental.nio.aWrite
 import mu.KLogging
-import nsync.index.SynchronizationStatus
 import nsync.kernel.SyncFolder
 import nsync.kernel.TransferStatus
 import nsync.kernel.bus.*
+import nsync.kernel.metadata.Status
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousFileChannel
@@ -27,12 +27,12 @@ class LocalFileStorage(override val bus: SignalBus): StorageDriver {
         val dst = Paths.get(folder.pathRemote, folder.fileRelativePath(localFile))
         logger.info { "LocalFileStorage: Transferring file $src to $dst" }
 
-        this.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.TRANSFERRING))
+        this.publish(TransferStatus(folder.folderId, localFile, Status.TRANSFERRING))
         if (AsyncFileChannelTransfer(src, dst).call()) {
-            this.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.SYNCHRONIZED))
+            this.publish(TransferStatus(folder.folderId, localFile, Status.SYNCHRONIZED))
             logger.info { "File $src successfully transferred to $dst" }
         } else {
-            this.publish(TransferStatus(folder.folderId, localFile, SynchronizationStatus.PENDING))
+            this.publish(TransferStatus(folder.folderId, localFile, Status.PENDING))
         }
     }
 

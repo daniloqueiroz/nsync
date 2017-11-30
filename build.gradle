@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.1.51'
+    ext.kotlin_version = '1.2.0'
     repositories {
         jcenter()
     }
@@ -32,8 +32,6 @@ dependencies {
 
             'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.19',
             'org.jetbrains.kotlinx:kotlinx-coroutines-nio:0.19',
-            
-            'org.mapdb:mapdb:3.0.5',
 
             'io.github.microutils:kotlin-logging:1.4.6',
             'ch.qos.logback:logback-classic:1.2.3',

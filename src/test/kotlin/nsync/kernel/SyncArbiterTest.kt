@@ -3,11 +3,8 @@ package nsync.kernel
 import kotlinx.coroutines.experimental.runBlocking
 import nsync.SimpleBus
 import nsync.asyncTest
-import nsync.confOf
 import nsync.kernel.bus.DeleteFile
 import nsync.kernel.bus.FileDeleted
-import nsync.kernel.bus.FileModified
-import nsync.kernel.bus.FolderAdded
 import nsync.kernel.synchronization.SyncArbiter
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.util.Files
@@ -19,7 +16,6 @@ class SyncArbiterTest {
 
     private val dataFolder = Files.newTemporaryFolder().toPath()
     private var arbiter: SyncArbiter? = null
-    private var catalog: FolderCatalog? = null
     private var bus: SimpleBus? = null
 
     private val id = "uid"
@@ -28,8 +24,7 @@ class SyncArbiterTest {
     @Before
     fun setup() = runBlocking<Unit>{
         bus = SimpleBus()
-        catalog = FolderCatalog(confOf(folder), bus!!)
-        arbiter = SyncArbiter(dataFolder, catalog!!, bus!!)
+        arbiter = SyncArbiter(bus!!)
 
         bus!!.signals.forEach {
             arbiter?.handle(it)

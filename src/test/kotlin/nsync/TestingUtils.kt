@@ -37,16 +37,6 @@ class SimpleBus: SignalBus {
     }
 }
 
-fun confOf(vararg folders: SyncFolder): Configuration {
-    val dirs = mutableMapOf<String, ConfSyncFolder>()
-    for(f in folders) {
-        dirs[f.folderId] = ConfSyncFolder(f.folderId, f.localFolder, f.remoteFolder)
-    }
-    val conf = Configuration()
-    conf.synchronization = dirs
-    return conf
-}
-
 /**
  * Sugar for ``runBlocking<Unit>`` to be used on tests
  */

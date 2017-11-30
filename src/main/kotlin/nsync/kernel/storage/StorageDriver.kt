@@ -14,7 +14,7 @@ interface StorageDriver {
     suspend fun deleteFile(localFile: Path, folder: SyncFolder)
 }
 
-
+// TODO StorageServer
 class StorageManager(private val bus: SignalBus) : Consumer {
     private val logger = KotlinLogging.logger {}
     private val drivers: MutableMap<String, StorageDriver> = mutableMapOf()
