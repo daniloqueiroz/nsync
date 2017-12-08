@@ -18,7 +18,7 @@ plugins {
 sourceCompatibility = JavaVersion.VERSION_1_9
 targetCompatibility = JavaVersion.VERSION_1_9
 
-mainClassName = 'nsync.InitKt'
+mainClassName = 'ui.cli.BaseKt'
 
 repositories {
     jcenter()

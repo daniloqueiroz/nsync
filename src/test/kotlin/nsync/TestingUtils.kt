@@ -1,10 +1,9 @@
 package nsync
 
 import kotlinx.coroutines.experimental.runBlocking
-import nsync.kernel.SyncFolder
-import nsync.kernel.bus.Consumer
-import nsync.kernel.bus.Signal
-import nsync.kernel.bus.SignalBus
+import nsync.signals.Consumer
+import nsync.signals.Signal
+import nsync.signals.SignalBus
 import kotlin.reflect.KClass
 
 class SimpleBus: SignalBus {
@@ -21,9 +20,9 @@ class SimpleBus: SignalBus {
         signals.add(type(data))
     }
 
-    override fun register(consumer: Consumer, vararg evtTypes: KClass<*>) {
+    override fun register(consumer: Consumer, evtTypes: List<KClass<*>>) {
         evtTypes.forEach {
-            val list = if (it in consumers) consumers[it]!! else mutableListOf<Consumer>()
+            val list = if (it in consumers) consumers[it]!! else mutableListOf()
             list.add(consumer)
             consumers[it] = list
         }

@@ -2,11 +2,11 @@
 
 ## WebUI/CLI
 
-WebUI/CLI -(http)-> REST API <--> Application -(nbus)-> [Sync Kernel]
+WebUI/CLI -(http)-> REST API <--> Kernel Facade -(nbus)-> [NSync Servers]
 
-## Sync Kernel
+## NSync Servers
 
-Analyzer -(nbus)-> Arbiter -(nbus)-> Storage
+Analyzer -(nbus)-> Sync -(nbus)-> Storage
 
 # Components
 * CLI/GUI:
@@ -18,17 +18,18 @@ Analyzer -(nbus)-> Arbiter -(nbus)-> Storage
 
     Provides access to Application resources through a HTTP RESTful API
 
-* Application:
+* Kernel Facade:
 
     Provide entry point for implement Use Cases operations.
-    Consume and execute AppCommands.
+    Execute operations asynchronously and provide access to Kernel
+    readonly data structures (metadata & metrics)
 
 * Analyzer:
 
     Analyzes local folders - watch directories trees for  files changes and
     do full folder scan, firing LocalFile event.
 
-* Sync Arbiter:
+* Sync:
 
     Consumes the LocalFile events, updates local file metadata information
     (file path, md5, last modification, size), and decide whether to fire FileTransfer
@@ -39,27 +40,16 @@ Analyzer -(nbus)-> Arbiter -(nbus)-> Storage
     Support for specific storage backend - do the actual file
     transfer. Fires TransferStatus events.
 
+* [Metadata](metadata.md):
+
+    Keeps metadata information about the Filesystems and files within the system.
+    Provides a readonly access and can be modified through asynchronous signals 
+
 * NBus:
 
     Message bus used for communication between the modules
     above. Takes care of coroutine initialization and so on.
 
-* Data Structures:
-
-    conf:
-        stored as json file
-        - general
-        - synchronizations:
-          - <sync name>
-            local: <local path - c:\documents>
-            storage: <remote path - smb://server/folder >
-                    
-    index_format:
-        file_path:checksum:size:timestamp
-        
-        index files are stored under the '.nsync/' folder and are named as
-        '<uuid>.index'
-        
 
 ## Open Question:
 • Sanitization: Removing old files
