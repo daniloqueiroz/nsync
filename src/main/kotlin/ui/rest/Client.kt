@@ -21,7 +21,7 @@ interface ApiService {
     fun shutdown(): Call<Status>
 
     @POST("nsync/filesystems")
-    fun addFolder(@Body folder: FSBody): Call<Nothing>
+    fun addFS(@Body folder: FSBody): Call<String>
 
     companion object Factory {
         fun create(url: String): ApiService {

@@ -1,9 +1,9 @@
 package nsync.analyzer
 
 import nsync.Server
-import nsync.signals.Signal
-import nsync.signals.SignalBus
-import nsync.signals.SyncFolder
+import nsync.Signal
+import nsync.SignalBus
+import nsync.SyncFolder
 
 class LocalFileWatchServer(bus: SignalBus) : Server(bus, listOf()) {
     private val watcher = DirWatcher(bus)

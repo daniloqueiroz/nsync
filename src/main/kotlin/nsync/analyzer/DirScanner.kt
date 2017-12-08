@@ -4,10 +4,10 @@ import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.consumeEach
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KotlinLogging
-import nsync.signals.LocalFile
-import nsync.signals.SyncFolder
-import nsync.signals.FileModified
-import nsync.signals.SignalBus
+import nsync.FileModified
+import nsync.LocalFile
+import nsync.SignalBus
+import nsync.SyncFolder
 import java.io.File
 import java.nio.file.Paths
 import kotlin.system.measureTimeMillis
@@ -42,7 +42,7 @@ class DirScanner(private val bus: SignalBus) : Runnable {
                 val event = LocalFile(folderId, child.toPath())
                 try {
                     logger.info { "Scanner find file ${event.localFilePath}" }
-                    bus.publish(::FileModified, event)
+                    bus.publish(FileModified(event))
                 } catch (err: Exception) {
                     logger.error(err) { "Error processing scanned file" }
                 }

@@ -20,12 +20,12 @@ internal data class Fsentry(
 
     companion object: Marshaller<Fsentry> {
         override fun to(obj: Fsentry): ByteBuffer {
-            val data = "${obj.id}|${obj.localUri}|${obj.remoteUri}"
+            val data = "${obj.id} ${obj.localUri} ${obj.remoteUri}"
             return data.toByteBuffer()
         }
 
         override fun from(buf: ByteBuffer): Fsentry {
-            val token = asString(buf).split("|")
+            val token = asString(buf).split(" ")
             return Fsentry(token[0], URI(token[1]), URI(token[2]))
         }
     }

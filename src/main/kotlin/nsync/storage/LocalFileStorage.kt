@@ -3,10 +3,10 @@ package nsync.storage
 import kotlinx.coroutines.experimental.nio.aRead
 import kotlinx.coroutines.experimental.nio.aWrite
 import mu.KLogging
-import nsync.signals.ChangeStatus
-import nsync.signals.SignalBus
-import nsync.signals.SyncFolder
-import nsync.signals.TransferStatus
+import nsync.ChangeStatus
+import nsync.SignalBus
+import nsync.SyncFolder
+import nsync.TransferStatus
 import nsync.metadata.Status
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -44,7 +44,7 @@ class LocalFileStorage(override val bus: SignalBus): StorageDriver {
     }
 
     private suspend fun publish(status: TransferStatus) {
-        bus.publish(::ChangeStatus, status)
+        bus.publish(ChangeStatus(status))
     }
 }
 

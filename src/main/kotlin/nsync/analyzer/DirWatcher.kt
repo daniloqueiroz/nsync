@@ -2,11 +2,7 @@ package nsync.analyzer
 
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
-import nsync.signals.LocalFile
-import nsync.signals.SyncFolder
-import nsync.signals.FileDeleted
-import nsync.signals.FileModified
-import nsync.signals.SignalBus
+import nsync.*
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -77,6 +73,6 @@ class DirWatcher(private val bus: SignalBus) {
     }
 
     private suspend fun publish(file: LocalFile, deleted: Boolean) {
-        bus.publish(if (deleted) ::FileDeleted else ::FileModified, file)
+        bus.publish(if (deleted) FileDeleted(file) else FileModified(file))
     }
 }

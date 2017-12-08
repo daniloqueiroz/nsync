@@ -10,10 +10,10 @@ import ch.qos.logback.core.FileAppender
 import mu.KLogging
 import nsync.analyzer.LocalFileWatchServer
 import nsync.metadata.MetadataServer
-import utils.AsyncBus
 import nsync.storage.StorageServer
 import nsync.synchronization.SyncServer
 import org.slf4j.LoggerFactory
+import utils.AsyncBus
 import utils.Configuration
 import java.nio.file.Path
 
@@ -32,7 +32,6 @@ class Loader(
             logger.info { "Bootstrapping kernel" }
             logger.info { "Initializing SignalBus system" }
             val bus = AsyncBus()
-            bus.start()
 
             logger.info { "Initializing kernel servers" }
             LocalFileWatchServer(bus)

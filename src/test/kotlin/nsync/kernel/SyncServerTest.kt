@@ -2,10 +2,10 @@ package nsync.kernel
 
 import kotlinx.coroutines.experimental.runBlocking
 import nsync.*
-import nsync.signals.DeleteFile
-import nsync.signals.FileDeleted
-import nsync.signals.LocalFile
-import nsync.signals.SyncFolder
+import nsync.DeleteFile
+import nsync.FileDeleted
+import nsync.LocalFile
+import nsync.SyncFolder
 import nsync.synchronization.SyncServer
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.util.Files

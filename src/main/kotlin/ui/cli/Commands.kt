@@ -67,7 +67,7 @@ internal class AddFS : CliCommand {
     var remoteUri: String? = null
 
     override fun invoke(ctx: BaseCommand) {
-        ctx.client(ctx.api.addFolder(FSBody(localUri = localUri!!, remoteUri = remoteUri!!))).then {
+        ctx.client(ctx.api.addFS(FSBody(localUri = localUri!!, remoteUri = remoteUri!!))).then {
             when (it) {
                 is Success -> {
                     ctx.exit("FSAdd request accepted")

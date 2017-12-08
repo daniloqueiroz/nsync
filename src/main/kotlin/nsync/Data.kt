@@ -1,4 +1,4 @@
-package nsync.signals
+package nsync
 
 import nsync.metadata.Status
 import java.net.URI

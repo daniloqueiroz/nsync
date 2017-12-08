@@ -1,10 +1,7 @@
 package nsync.storage
 
 import mu.KotlinLogging
-import nsync.Server
-import nsync.signals.RemoteFile
-import nsync.signals.SyncFolder
-import nsync.signals.*
+import nsync.*
 import java.nio.file.Path
 
 interface StorageDriver {

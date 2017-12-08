@@ -1,30 +1,73 @@
 package nsync
 
 import kotlinx.coroutines.experimental.runBlocking
-import nsync.signals.Consumer
-import nsync.signals.Signal
-import nsync.signals.SignalBus
+import java.util.*
 import kotlin.reflect.KClass
 
-class SimpleBus: SignalBus {
+class SimpleConnection<E, T : Signal<E>>(
+        val bus: SimpleBus,
+        val outK: KClass<T>
+) : Connection<E, T> {
+
+    private val id: UUID
+    private var result: T? = null
+
+    init {
+        id = bus.register(this, listOf(outK))
+    }
+
+    override fun close() {
+        bus.deregister(id)
+    }
+
+    suspend override fun receive(): T {
+        outK
+        return this.result!!
+    }
+
+    suspend override fun handle(msg: Signal<*>) {
+        if (outK.isInstance(msg::class)) {
+            result = msg as T
+        }
+    }
+
+    suspend override fun send(msg: Signal<*>) {
+        bus.publish(msg)
+    }
+
+}
+
+class SimpleBus : SignalBus {
+
     val signals: MutableList<Signal<*>> = mutableListOf()
-    val consumers: MutableMap<KClass<*>, MutableList<Consumer>> = mutableMapOf()
+    val consumers: MutableMap<KClass<*>, MutableList<UUID>> = mutableMapOf()
+    val keys: MutableMap<UUID, Consumer> = mutableMapOf()
 
-    override fun start() {
+    override fun <E, T : Signal<E>> connect(eventKlass: KClass<T>): Connection<E, T> {
+        return SimpleConnection(this, eventKlass)
     }
 
-    override fun stop() {
+    suspend override fun <E, T : Signal<E>> publish(msg: T) {
+        signals.add(msg)
     }
 
-    suspend override fun <E, T : Signal<E>> publish(type: (E) -> T, data: E) {
-        signals.add(type(data))
+    override fun register(consumer: Consumer, evtTypes: List<KClass<*>>): UUID {
+        val key = UUID.randomUUID()
+        for (type in evtTypes) {
+            val existent = consumers.getOrDefault(type, mutableListOf())
+            existent.add(key)
+            consumers[type] = existent
+            keys[key] = consumer
+        }
+        return key
     }
 
-    override fun register(consumer: Consumer, evtTypes: List<KClass<*>>) {
-        evtTypes.forEach {
-            val list = if (it in consumers) consumers[it]!! else mutableListOf()
-            list.add(consumer)
-            consumers[it] = list
+    override fun deregister(key: UUID) {
+        val consumer = this.keys.remove(key)
+        consumer?.let {
+            consumers.values.forEach {
+                it.remove(key)
+            }
         }
     }
 

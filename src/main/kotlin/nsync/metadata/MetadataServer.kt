@@ -1,8 +1,7 @@
 package nsync.metadata
 
 import mu.KLogging
-import nsync.Server
-import nsync.signals.*
+import nsync.*
 import utils.AsyncFile
 import java.nio.file.Path
 
@@ -33,7 +32,7 @@ class MetadataServer(bus: SignalBus, metadataDirectory: Path) : Server(bus, list
                     remoteFolder = entry.remoteUri,
                     identifier = entry.uri
             )
-            this.publish(::FSAdded, nuFs)
+            this.publish(FSAdded(nuFs))
         } catch (err: IllegalArgumentException) {
             logger.error(err) { "Unable to add fs." }
         }
