@@ -9,9 +9,9 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
-import utils.Failure
-import utils.Result
-import utils.Success
+import commons.Failure
+import commons.Result
+import commons.Success
 
 interface ApiService {
     @GET("nsync/server")

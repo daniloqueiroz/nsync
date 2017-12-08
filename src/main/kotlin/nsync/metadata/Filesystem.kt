@@ -5,8 +5,8 @@ import extensions.toByteBuffer
 import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
 import mu.KotlinLogging
-import utils.AsyncFile
-import utils.Configuration
+import commons.AsyncFile
+import commons.Configuration
 import java.nio.ByteBuffer
 import java.util.*
 

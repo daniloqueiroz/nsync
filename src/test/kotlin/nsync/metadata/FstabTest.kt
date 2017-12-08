@@ -4,7 +4,7 @@ import nsync.asyncTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
 import org.junit.Test
-import utils.AsyncFile
+import commons.AsyncFile
 import java.net.URI
 import java.nio.file.Paths
 

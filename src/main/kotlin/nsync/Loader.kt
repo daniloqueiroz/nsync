@@ -13,8 +13,8 @@ import nsync.metadata.MetadataServer
 import nsync.storage.StorageServer
 import nsync.synchronization.SyncServer
 import org.slf4j.LoggerFactory
-import utils.AsyncBus
-import utils.Configuration
+import commons.AsyncBus
+import commons.Configuration
 import java.nio.file.Path
 
 /**

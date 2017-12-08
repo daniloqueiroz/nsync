@@ -1,4 +1,4 @@
-package utils
+package commons
 
 sealed class Result<T> {
     fun then(block: (Result<T>) -> Unit): Result<T> {

@@ -4,8 +4,8 @@ import nsync.Loader
 import picocli.CommandLine
 import ui.rest.FSBody
 import ui.rest.WebServer
-import utils.Failure
-import utils.Success
+import commons.Failure
+import commons.Success
 
 
 @CommandLine.Command(description = arrayOf("Starts daemon"), name = "server")

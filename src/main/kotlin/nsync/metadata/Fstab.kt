@@ -3,7 +3,7 @@ package nsync.metadata
 import extensions.asString
 import extensions.toByteBuffer
 import mu.KLogging
-import utils.AsyncFile
+import commons.AsyncFile
 import java.net.URI
 import java.nio.ByteBuffer
 import java.util.*
