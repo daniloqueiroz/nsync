@@ -10,14 +10,8 @@ import commons.Success
 
 @CommandLine.Command(description = arrayOf("Starts daemon"), name = "server")
 internal class Server : CliCommand {
-    @CommandLine.Option(
-            names = arrayOf("-v"),
-            help = true,
-            description = arrayOf("If verbose is enabled, it logs to STD instead of file"))
-    var verbose: Boolean = false
-
     override fun invoke(ctx: BaseCommand) {
-        val loader = Loader(verbose, ctx.logLevel);
+        val loader = Loader()
         val kernel = loader.boot()
         WebServer(ctx.port, kernel).start()
         kernel.start()
@@ -43,7 +37,6 @@ internal class Stop : CliCommand {
 @CommandLine.Command(description = arrayOf("Checks if server is running"), name = "status")
 internal class Status : CliCommand {
     override fun invoke(ctx: BaseCommand) {
-
         ctx.client(ctx.api.status()).then {
             when (it) {
                 is Success -> {
