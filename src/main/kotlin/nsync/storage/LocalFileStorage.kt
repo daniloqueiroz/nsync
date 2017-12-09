@@ -4,7 +4,7 @@ import kotlinx.coroutines.experimental.nio.aRead
 import kotlinx.coroutines.experimental.nio.aWrite
 import mu.KLogging
 import nsync.ChangeStatus
-import nsync.SignalBus
+import commons.SignalBus
 import nsync.SyncFolder
 import nsync.TransferStatus
 import nsync.metadata.Status

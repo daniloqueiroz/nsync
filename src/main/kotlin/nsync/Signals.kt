@@ -1,5 +1,6 @@
 package nsync
 
+import commons.Signal
 import java.net.URI
 
 /**
@@ -14,25 +15,25 @@ import java.net.URI
  *
  * Signals can contains some data as its payload.
  */
-sealed class Signal<out T>(
-        val payload: T
-)
+sealed class NSignal<out T>(
+        override val payload: T
+): Signal<T>
 
 // Action
-class Stop(data: Unit = Unit) : Signal<Unit>(data)
+class Stop(data: Unit = Unit) : NSignal<Unit>(data)
 
-class AddFS(data: FS) : Signal<FS>(data)
+class AddFS(data: FS) : NSignal<FS>(data)
 
-class TransferFile(data: RemoteFile) : Signal<RemoteFile>(data)
-class DeleteFile(data: RemoteFile) : Signal<RemoteFile>(data)
-class ChangeStatus(data: TransferStatus) : Signal<TransferStatus>(data)
+class TransferFile(data: RemoteFile) : NSignal<RemoteFile>(data)
+class DeleteFile(data: RemoteFile) : NSignal<RemoteFile>(data)
+class ChangeStatus(data: TransferStatus) : NSignal<TransferStatus>(data)
 
 
 // Notify
-class FSAdded(data: FS) : Signal<FS>(data)
+class FSAdded(data: FS) : NSignal<FS>(data)
 
-class FileModified(data: LocalFile) : Signal<LocalFile>(data)
-class FileDeleted(data: LocalFile) : Signal<LocalFile>(data)
+class FileModified(data: LocalFile) : NSignal<LocalFile>(data)
+class FileDeleted(data: LocalFile) : NSignal<LocalFile>(data)
 
 data class FS(
         val localFolder: URI,

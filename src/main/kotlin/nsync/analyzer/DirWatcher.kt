@@ -1,5 +1,6 @@
 package nsync.analyzer
 
+import commons.SignalBus
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
 import nsync.*

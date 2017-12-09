@@ -6,7 +6,7 @@ import kotlinx.coroutines.experimental.runBlocking
 import mu.KotlinLogging
 import nsync.FileModified
 import nsync.LocalFile
-import nsync.SignalBus
+import commons.SignalBus
 import nsync.SyncFolder
 import java.io.File
 import java.nio.file.Paths

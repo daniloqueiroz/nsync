@@ -1,8 +1,8 @@
 package nsync.analyzer
 
-import nsync.Server
-import nsync.Signal
-import nsync.SignalBus
+import commons.Server
+import commons.Signal
+import commons.SignalBus
 import nsync.SyncFolder
 
 class LocalFileWatchServer(bus: SignalBus) : Server(bus, listOf()) {

@@ -1,5 +1,9 @@
 package nsync
 
+import commons.Connection
+import commons.Consumer
+import commons.Signal
+import commons.SignalBus
 import kotlinx.coroutines.experimental.runBlocking
 import java.util.*
 import kotlin.reflect.KClass

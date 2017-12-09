@@ -1,8 +1,13 @@
-package nsync
+package commons
 
 import java.io.Closeable
 import java.util.*
 import kotlin.reflect.KClass
+
+
+interface Signal<out T> {
+    val payload: T
+}
 
 interface Consumer {
     suspend fun handle(msg: Signal<*>)
