@@ -43,14 +43,14 @@ class BaseCommand(private val args: Array<String>) : CliCommand {
             help = true,
             description = arrayOf("if verbose is enabled,  it logs to STD instead of file")
     )
-    private var verbose: Boolean = false
+    var verbose: Boolean = false
 
     @CommandLine.Option(
             names = arrayOf("-l", "--level"),
             help = true,
             description = arrayOf("Log level")
     )
-    private var logLevel: String = "info"
+    var logLevel: String = "info"
 
     @CommandLine.Option(
             names = arrayOf("-p", "--port"),
@@ -82,7 +82,6 @@ class BaseCommand(private val args: Array<String>) : CliCommand {
             CommandLine.usage(base, System.err)
         } else {
             val cmd = parsed[1].getCommand<CliCommand>()
-            configureLog(Configuration.directory, base.verbose, base.logLevel)
             cmd(base)
         }
     }

@@ -1,16 +1,19 @@
 package ui.cli
 
+import commons.Configuration
 import nsync.Loader
 import picocli.CommandLine
 import ui.rest.FSBody
 import ui.rest.WebServer
 import commons.Failure
 import commons.Success
+import commons.configureLog
 
 
 @CommandLine.Command(description = arrayOf("Starts daemon"), name = "server")
 internal class Server : CliCommand {
     override fun invoke(ctx: BaseCommand) {
+        configureLog(Configuration.directory, ctx.verbose, ctx.logLevel)
         val loader = Loader()
         val kernel = loader.boot()
         WebServer(ctx.port, kernel).start()
