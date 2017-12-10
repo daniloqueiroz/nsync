@@ -66,11 +66,10 @@ internal class AddFS : CliCommand {
         ctx.client(ctx.api.addFS(FSBody(localUri = localUri!!, remoteUri = remoteUri!!))).then {
             when (it) {
                 is Success -> {
-                    ctx.exit("FSAdd request accepted")
+                    ctx.exit("FS added ${it.value.id} ${it.value.localUri} ${it.value.remoteUri}")
                 }
                 is Failure -> {
-                    it.error.printStackTrace()
-                    ctx.exit("Unable to retrieve send FSAdd request: ${it.message}", 1)
+                    ctx.exit("Unable to add fs: ${it.message}", 1)
                 }
             }
         }

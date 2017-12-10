@@ -1,5 +1,7 @@
 package nsync
 
+
+// TODO remove this file!
 import nsync.metadata.Status
 import java.net.URI
 import java.nio.file.Path
