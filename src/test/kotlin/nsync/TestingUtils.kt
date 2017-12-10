@@ -24,8 +24,7 @@ class SimpleConnection<E, T : Signal<E>>(
         bus.deregister(id)
     }
 
-    suspend override fun receive(): T {
-        outK
+    suspend override fun receive(timeout: Long): T {
         return this.result!!
     }
 

@@ -22,7 +22,7 @@ class KernelFacade(
     private val logger = KotlinLogging.logger {}
 
     fun start() = runBlocking {
-        logger.info { "Starting $name kernel" }
+        logger.info { "$name kernel up and running" }
         val running = measureTimeMillis {
             bus.join()
         }
@@ -36,11 +36,6 @@ class KernelFacade(
     fun <E, T : Signal<E>> connect(eventKlass: KClass<T>): Connection<E, T> {
         return this.bus.connect(eventKlass)
     }
-
-    // TODO move it to iteractors
-    suspend fun addFS(localUri: String, remoteUri: String) =
-            bus.publish(AddFS(FS(localFolder = URI(localUri), remoteFolder = URI(remoteUri))))
-
 }
 
 /**

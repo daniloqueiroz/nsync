@@ -1,14 +1,12 @@
 package commons
 
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.Job
+import kotlinx.coroutines.experimental.*
 import kotlinx.coroutines.experimental.channels.Channel
 import kotlinx.coroutines.experimental.channels.consumeEach
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.yield
 import mu.KLogging
 import nsync.*
 import java.util.*
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
@@ -30,8 +28,14 @@ class AsyncConnection<F, G : Signal<F>>(
 
     suspend override fun send(msg: Signal<*>) = bus.publish(msg)
 
-    suspend override fun receive(): G {
-        return chn.receive() as G
+    suspend override fun receive(timeout: Long): G = runBlocking {
+        try {
+            withTimeout(timeout, TimeUnit.MILLISECONDS, {
+                chn.receive() as G
+            })
+        } catch (err: Exception) {
+            throw NoResponseException(err)
+        }
     }
 
     override fun close() {

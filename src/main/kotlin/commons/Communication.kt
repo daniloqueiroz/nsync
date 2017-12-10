@@ -13,10 +13,12 @@ interface Consumer {
     suspend fun handle(msg: Signal<*>)
 }
 
+class NoResponseException(cause: Exception): Exception(cause)
+
 interface Connection<F, G : Signal<F>> : Consumer, Closeable {
     suspend fun send(msg: Signal<*>)
 
-    suspend fun receive(): G
+    suspend fun receive(msTimeout: Long = 500): G
 }
 
 interface SignalBus {
