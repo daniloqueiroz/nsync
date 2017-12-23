@@ -16,7 +16,7 @@ class FSTabTest {
         filePath.toFile().let {
             if (it.exists()) it.delete()
         }
-        catalog = Fstab(AsyncFile(filePath, Fsentry))
+        catalog = Fstab(AsyncFile(filePath, FSEntry))
     }
 
     @Test fun find_NoFS() {
@@ -45,7 +45,7 @@ class FSTabTest {
         val remoteUri2 = URI("file:///tmp/4")
         catalog!!.addFS(localUri1, remoteUri1)
         val addedFS = catalog!!.addFS(localUri2, remoteUri2)
-        catalog = Fstab(AsyncFile(filePath, Fsentry))
+        catalog = Fstab(AsyncFile(filePath, FSEntry))
 
         val fs = catalog?.findFS(addedFS.id)
         assertThat(fs?.localUri).isEqualTo(addedFS.localUri)

@@ -20,7 +20,8 @@ internal interface CliCommand {
                 Server::class,
                 Status::class,
                 Stop::class,
-                AddFS::class
+                AddFS::class,
+                ListFS::class
         )
 )
 class BaseCommand(private val args: Array<String>) : CliCommand {
@@ -62,8 +63,8 @@ class BaseCommand(private val args: Array<String>) : CliCommand {
     val client by lazy { Client(port) }
     val api by lazy { client.api }
 
-    fun exit(message: String, code: Int = 0) {
-        print(message)
+    fun exit(message: String? = null, code: Int = 0) {
+        message?.let { print(it) }
         exitProcess(code)
     }
 

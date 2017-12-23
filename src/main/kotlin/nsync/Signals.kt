@@ -1,6 +1,7 @@
 package nsync
 
 import commons.Signal
+import nsync.metadata.FS
 import java.net.URI
 
 /**
@@ -21,22 +22,20 @@ sealed class NSignal<out T>(
 
 // Action
 class Stop(data: Unit = Unit) : NSignal<Unit>(data)
-
 class AddFS(data: FS) : NSignal<FS>(data)
+
+// Notify
+class FSAdded(data: FS) : NSignal<FS>(data)
+
+
+// old signals
 
 class TransferFile(data: RemoteFile) : NSignal<RemoteFile>(data)
 class DeleteFile(data: RemoteFile) : NSignal<RemoteFile>(data)
 class ChangeStatus(data: TransferStatus) : NSignal<TransferStatus>(data)
 
-
-// Notify
-class FSAdded(data: FS) : NSignal<FS>(data)
-
 class FileModified(data: LocalFile) : NSignal<LocalFile>(data)
 class FileDeleted(data: LocalFile) : NSignal<LocalFile>(data)
 
-data class FS(
-        val localFolder: URI,
-        val remoteFolder: URI,
-        val identifier: URI? = null)
+
 

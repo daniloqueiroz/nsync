@@ -1,22 +1,27 @@
 package nsync.metadata
 
-import mu.KLogging
-import nsync.*
 import commons.AsyncFile
 import commons.Server
 import commons.Signal
 import commons.SignalBus
+import mu.KLogging
+import nsync.AddFS
+import nsync.FSAdded
 import java.nio.file.Path
 
 
-class MetadataServer(bus: SignalBus, metadataDirectory: Path) : Server(bus, listOf(AddFS::class)) {
+class FileSystemServer(
+        bus: SignalBus,
+        metadataDirectory: Path
+) : Server(bus, listOf(AddFS::class)), Metadata {
+
     private companion object : KLogging()
 
     private val tab: Fstab
 
     init {
         val file = metadataDirectory.resolve(FSTAB_FILENAME)
-        val fstabFile = AsyncFile(file, Fsentry)
+        val fstabFile = AsyncFile(file, FSEntry)
         tab = Fstab(fstabFile)
     }
 
@@ -41,5 +46,8 @@ class MetadataServer(bus: SignalBus, metadataDirectory: Path) : Server(bus, list
         }
     }
 
+    override fun filesystems(): Sequence<FS> {
+        return this.tab.map{ FS(identifier = it.uri, localFolder = it.localUri, remoteFolder = it.remoteUri) }
+    }
 }
 

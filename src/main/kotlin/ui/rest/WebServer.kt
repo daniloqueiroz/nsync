@@ -2,6 +2,7 @@ package ui.rest
 
 import commons.NoResponseException
 import interactors.AddFsCommand
+import interactors.ListFsCommand
 import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
 import nsync.KernelFacade
@@ -9,6 +10,7 @@ import okhttp3.OkHttpClient
 import org.http4k.core.Method
 import org.http4k.core.Request
 import org.http4k.core.Response
+import org.http4k.core.Status.Companion.BAD_REQUEST
 import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.server.Http4kServer
@@ -37,6 +39,9 @@ interface ApiService {
     @DELETE("nsync/server")
     fun shutdown(): Call<Status>
 
+    @GET("nsync/filesystems")
+    fun listFS(): Call<Collection<FSBody>>
+
     @POST("nsync/filesystems")
     fun addFS(@Body folder: FSBody): Call<FSBody>
 
@@ -60,6 +65,7 @@ class WebServer(private val port: Int, private val kernel: KernelFacade) {
                     "/server" bind Method.GET to this::ping,
                     "/server" bind Method.DELETE to this::stop,
                     "/filesystems" bind routes(
+                            "/" bind Method.GET to this::listFS,
                             "/" bind Method.POST to this::addFS
                     )
             )
@@ -93,15 +99,33 @@ class WebServer(private val port: Int, private val kernel: KernelFacade) {
         toResponse(Status(uptimeMins))
     }
 
+    private fun listFS(req: Request): Response = runBlocking {
+        logger.info { "List FS request" }
+        try {
+            val filesystems = ListFsCommand(kernel)()
+            val body = filesystems.map { it ->
+                FSBody(
+                        id = it.identifier.toString(),
+                        localUri = it.localFolder.toString(),
+                        remoteUri = it.remoteFolder.toString()
+                )
+            }.toList()
+            toResponse(body)
+        } catch (err: NoResponseException) {
+            logger.warn { "Unable to list FS due NoResponse error" }
+            Response(BAD_REQUEST)
+        }
+    }
+
     private fun addFS(req: Request): Response = runBlocking {
-        logger.info { "Add folder request" }
+        logger.info { "Add FS request" }
         val folderReq: FSBody = parseRequest(req)
         try {
             val id = AddFsCommand(kernel)(folderReq.localUri, folderReq.remoteUri)
             toResponse(FSBody(id = id.toString(), localUri = folderReq.localUri, remoteUri = folderReq.remoteUri))
         } catch (err: NoResponseException) {
-            logger.warn { "Unable to add FS due NoResponse error"}
-            Response(org.http4k.core.Status.BAD_REQUEST)
+            logger.warn { "Unable to list FS due NoResponse error" }
+            Response(BAD_REQUEST)
         }
     }
 }

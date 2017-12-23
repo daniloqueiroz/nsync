@@ -5,10 +5,11 @@ import kotlinx.coroutines.experimental.runBlocking
 import mu.KLogging
 import mu.KotlinLogging
 import nsync.analyzer.LocalFileWatchServer
-import nsync.metadata.MetadataServer
+import nsync.metadata.FS
+import nsync.metadata.FileSystemServer
+import nsync.metadata.Metadata
 import nsync.storage.StorageServer
 import nsync.synchronization.SyncServer
-import java.net.URI
 import kotlin.reflect.KClass
 import kotlin.system.measureTimeMillis
 
@@ -17,7 +18,7 @@ const val version = "1.0.0-devel"
 
 class KernelFacade(
         private val bus: SignalBus,
-        private val metadata: MetadataServer
+        private val metadata: Metadata
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -36,6 +37,8 @@ class KernelFacade(
     fun <E, T : Signal<E>> connect(eventKlass: KClass<T>): Connection<E, T> {
         return this.bus.connect(eventKlass)
     }
+
+    fun filesystems(): Sequence<FS> = metadata.filesystems()
 }
 
 /**
@@ -54,7 +57,7 @@ class Loader {
             logger.info { "Initializing kernel servers" }
             LocalFileWatchServer(bus)
             SyncServer(bus)
-            val metadata = MetadataServer(bus, Configuration.directory)
+            val metadata = FileSystemServer(bus, Configuration.directory)
             val storage = StorageServer(bus)
 
             logger.info { "Loading storage drivers" }

@@ -52,26 +52,3 @@ internal class Status : CliCommand {
         }
     }
 }
-
-
-@CommandLine.Command(description = arrayOf("Add a new Folder to be synced"), name = "addfs")
-internal class AddFS : CliCommand {
-    @CommandLine.Parameters(index = "0", description = arrayOf("Local folder URI. eg.: 'file:///tmp'"))
-    var localUri: String? = null
-
-    @CommandLine.Parameters(index = "1", description = arrayOf("Local folder URI. eg.: 'file:///tmp'"))
-    var remoteUri: String? = null
-
-    override fun invoke(ctx: BaseCommand) {
-        ctx.client(ctx.api.addFS(FSBody(localUri = localUri!!, remoteUri = remoteUri!!))).then {
-            when (it) {
-                is Success -> {
-                    ctx.exit("FS added ${it.value.id} ${it.value.localUri} ${it.value.remoteUri}")
-                }
-                is Failure -> {
-                    ctx.exit("Unable to add fs: ${it.message}", 1)
-                }
-            }
-        }
-    }
-}

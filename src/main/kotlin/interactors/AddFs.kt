@@ -1,6 +1,7 @@
 package interactors
 
 import nsync.*
+import nsync.metadata.FS
 import java.net.URI
 
 class AddFsCommand(private val kernel: KernelFacade) {
